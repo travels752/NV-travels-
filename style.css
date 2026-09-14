@@ -56,3 +56,32 @@ footer {
   color: #777;
   font-size: 14px;
 }
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+input {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 12px auto;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 16px;
+  background: white;
+}
+
+#bookingMessage {
+  text-align: center;
+  font-weight: bold;
+  margin: 15px;
+}
+
+hr {
+  max-width: 420px;
+  margin: 30px auto;
+  border: 0;
+  border-top: 1px solid #ddd;
+}
