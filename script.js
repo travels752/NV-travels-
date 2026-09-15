@@ -1,28 +1,42 @@
 function bookRide() {
   const pickup = document.getElementById("pickup").value;
   const drop = document.getElementById("drop").value;
-  const date = document.getElementById("date").value;
-  const time = document.getElementById("time").value;
-  const message = document.getElementById("bookingMessage");
+  const vehicle = document.getElementById("vehicle").value;
 
-  if (!pickup || !drop || !date || !time) {
-    message.textContent = "कृपया सभी जानकारी भरें।";
+  if (!pickup || !drop || !vehicle) {
+    document.getElementById("rideMessage").textContent =
+      "कृपया Pickup, Drop और Vehicle चुनें।";
     return;
   }
 
-  message.textContent =
-    "Ride request तैयार है! NV Travels जल्द ही आपकी booking confirm करेगा।";
+  document.getElementById("rideMessage").textContent =
+    "✅ Ride request तैयार है!";
 }
-function customerLogin() {
-  const name = document.getElementById("customerName").value;
-  const phone = document.getElementById("customerPhone").value;
-  const password = document.getElementById("customerPassword").value;
-  const message = document.getElementById("loginMessage");
 
-  if (!name || !phone || !password) {
-    message.textContent = "कृपया सभी जानकारी भरें।";
+function bookHotel() {
+  const city = document.getElementById("hotelCity").value;
+
+  if (!city) {
+    document.getElementById("hotelMessage").textContent =
+      "कृपया city डालें।";
     return;
   }
 
-  message.textContent = "Login details प्राप्त हो गईं।";
+  document.getElementById("hotelMessage").textContent =
+    "🏨 Hotels खोजने की सुविधा जल्द उपलब्ध होगी।";
+}
+
+function login() {
+  document.getElementById("loginMessage").textContent =
+    "👤 Login / Register system जल्द जोड़ा जाएगा।";
+}
+
+function driverLogin() {
+  document.getElementById("driverMessage").textContent =
+    "🚗 Driver Login system जल्द जोड़ा जाएगा।";
+}
+
+function social() {
+  document.getElementById("socialMessage").textContent =
+    "📱 Social section जल्द खुलेगा।";
 }
