@@ -231,3 +231,71 @@
     <script src="script.js"></script>
 </body>
 </html>
+<!-- PACKAGES -->
+<section id="screen-packages" class="screen">
+
+    <h2 class="section-title">📦 Travel Packages</h2>
+
+    <div class="card">
+
+        <div class="input-group">
+            <input
+                id="package-from"
+                type="text"
+                placeholder="📍 Kahan se?"
+            >
+        </div>
+
+        <div class="input-group">
+            <input
+                id="package-to"
+                type="text"
+                placeholder="📍 Kahan tak?"
+            >
+        </div>
+
+        <div class="input-group">
+            <input
+                id="package-days"
+                type="number"
+                min="1"
+                placeholder="📅 Kitne din?"
+            >
+        </div>
+
+        <div class="input-group">
+            <input
+                id="package-passengers"
+                type="number"
+                min="1"
+                placeholder="👥 Kitne passengers?"
+            >
+        </div>
+
+        <div class="input-group">
+            <select id="package-vehicle">
+                <option value="">🚗 Vehicle select karo</option>
+                <option>Car</option>
+                <option>Sedan</option>
+                <option>SUV</option>
+                <option>Tempo Traveller</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <select id="package-hotel">
+                <option value="">🏨 Hotel included?</option>
+                <option>Yes</option>
+                <option>No</option>
+            </select>
+        </div>
+
+        <button class="main-btn" onclick="searchPackages()">
+            🔎 Package Search Karo
+        </button>
+
+    </div>
+
+    <div id="package-results"></div>
+
+</section>
