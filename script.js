@@ -40,3 +40,7 @@ function social() {
   document.getElementById("socialMessage").textContent =
     "📱 Social section जल्द खुलेगा।";
 }
+function skipHotel() {
+  document.getElementById("hotelMessage").textContent =
+    "⏭️ Hotel booking skipped. आप आगे बढ़ सकते हैं।";
+}
