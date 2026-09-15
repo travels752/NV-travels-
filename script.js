@@ -1,336 +1,124 @@
-// ===============================
-// CUSTOMER ACCOUNT
-// ===============================
+let appState = {
+    role: 'customer',
+    isLoggedIn: false,
+    userName: 'Traveler',
+    driverEarnings: 0,
+    driverRides: 0,
+    hasHotelPass: false,
+    passExpiry: 'Not Active'
+};
 
-function registerUser() {
-  const name = document.getElementById("userName").value.trim();
-  const mobile = document.getElementById("userMobile").value.trim();
-  const password = document.getElementById("userPassword").value;
-
-  if (!name || !mobile || !password) {
-    show("accountMessage", "कृपया सभी details भरें।");
-    return;
-  }
-
-  if (!/^\d{10}$/.test(mobile)) {
-    show("accountMessage", "कृपया 10 अंकों का Mobile Number डालें।");
-    return;
-  }
-
-  localStorage.setItem("nvUser", JSON.stringify({
-    name,
-    mobile,
-    password
-  }));
-
-  show("accountMessage", "✅ Account successfully बनाया गया।");
+function setRole(role) {
+    appState.role = role;
+    document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('auth-title').innerText = role.toUpperCase() + " ACCESS portal";
 }
 
-function loginUser() {
-  const mobile = document.getElementById("userMobile").value.trim();
-  const password = document.getElementById("userPassword").value;
+function handleAuth() {
+    const phone = document.getElementById('auth-phone').value;
+    const pass = document.getElementById('auth-pass').value;
 
-  const saved = localStorage.getItem("nvUser");
+    if (!phone || !pass) {
+        alert("🚨 Please fill all validation fields!");
+        return;
+    }
 
-  if (!saved) {
-    show("accountMessage", "❌ पहले Create Account करें।");
-    return;
-  }
+    appState.isLoggedIn = true;
+    appState.userName = phone.slice(-4); // Temporary username masking
 
-  const user = JSON.parse(saved);
-
-  if (mobile === user.mobile && password === user.password) {
-    localStorage.setItem("nvLoggedIn", "true");
-
-    show(
-      "accountMessage",
-      "✅ Login successful! Welcome " + user.name
-    );
-  } else {
-    show("accountMessage", "❌ Mobile Number या Password गलत है।");
-  }
+    document.getElementById('screen-login').classList.remove('active-screen');
+    document.getElementById('global-nav').style.display = 'flex';
+    
+    // Role matching screen redirection
+    if (appState.role === 'customer') {
+        switchTab('home');
+    } else if (appState.role === 'driver') {
+        switchTab('driver-panel');
+    } else if (appState.role === 'owner') {
+        switchTab('owner-panel');
+    }
 }
 
-function logoutUser() {
-  localStorage.removeItem("nvLoggedIn");
-  show("accountMessage", "🚪 Customer Logout successful।");
+function switchTab(screenId) {
+    document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active-screen'));
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    
+    const targetScreen = document.getElementById('screen-' + screenId);
+    if (targetScreen) targetScreen.classList.add('active-screen');
+    
+    // Highlight correct tab element manually matching the context
+    if(screenId === 'home') document.getElementById('tab-home').classList.add('active');
+    if(screenId === 'hotels') document.getElementById('tab-hotels').classList.add('active');
+    if(screenId === 'social') document.getElementById('tab-social').classList.add('active');
+    if(screenId === 'profile') document.getElementById('tab-profile').classList.add('active');
 }
 
+function calculateFare() {
+    const pick = document.getElementById('pickup').value;
+    const drop = document.getElementById('drop').value;
 
-// ===============================
-// DRIVER ACCOUNT
-// ===============================
+    if (!pick || !drop) {
+        alert("Please map pickup & destination nodes.");
+        return;
+    }
 
-function registerDriver() {
-  const name = document.getElementById("driverName").value.trim();
-  const mobile = document.getElementById("driverMobile").value.trim();
-  const password = document.getElementById("driverPassword").value;
-  const vehicle = document.getElementById("driverVehicle").value;
-  const vehicleNumber =
-    document.getElementById("vehicleNumber").value.trim();
-
-  if (!name || !mobile || !password || !vehicle || !vehicleNumber) {
-    show("driverMessage", "कृपया सभी Driver details भरें।");
-    return;
-  }
-
-  if (!/^\d{10}$/.test(mobile)) {
-    show("driverMessage", "कृपया 10 अंकों का Mobile Number डालें।");
-    return;
-  }
-
-  localStorage.setItem("nvDriver", JSON.stringify({
-    name,
-    mobile,
-    password,
-    vehicle,
-    vehicleNumber
-  }));
-
-  show(
-    "driverMessage",
-    "✅ Driver registration successful। अब Login करें।"
-  );
+    // Dynamic fare logic computation 
+    const baseFare = Math.floor(Math.random() * (600 - 200 + 1)) + 200;
+    document.getElementById('fare-amount').innerText = "₹" + baseFare;
+    document.getElementById('fare-window').style.style.display = 'flex';
+    document.getElementById('request-btn').style.display = 'block';
+    
+    // Pass pricing variable state context globally to simulated ride generator
+    window.lastCalculatedFare = baseFare;
 }
 
-function loginDriver() {
-  const mobile = document.getElementById("driverMobile").value.trim();
-  const password = document.getElementById("driverPassword").value;
-
-  const saved = localStorage.getItem("nvDriver");
-
-  if (!saved) {
-    show("driverMessage", "❌ पहले Driver Registration करें।");
-    return;
-  }
-
-  const driver = JSON.parse(saved);
-
-  if (mobile === driver.mobile && password === driver.password) {
-    localStorage.setItem("nvDriverLoggedIn", "true");
-
-    show(
-      "driverMessage",
-      "✅ Driver Login successful! Welcome " + driver.name
-    );
-
-    refreshRides();
-  } else {
-    show("driverMessage", "❌ Mobile Number या Password गलत है।");
-  }
+function sendDriverRequest() {
+    alert("📡 Syncing live GPS telemetry... Sending request to nearby drivers in Puri.");
+    
+    // Simulate real driver acceptance after 2 seconds
+    setTimeout(() => {
+        alert(`✅ Ride Accepted by Driver Biswal (OD-02-X-9981)!\nEstimated Fare: ₹${window.lastCalculatedFare}\nDriver will deduct 15% system fee upon drop.`);
+        
+        // Update mock driver dashboard engine data
+        appState.driverRides += 1;
+        const driverCut = window.lastCalculatedFare * 0.85;
+        appState.driverEarnings += driverCut;
+        
+        // Refresh dynamic UI elements metrics
+        document.getElementById('drv-rides').innerText = appState.driverRides;
+        document.getElementById('drv-earnings').innerText = "₹" + appState.driverEarnings.toFixed(2);
+    }, 2000);
 }
 
-function logoutDriver() {
-  localStorage.removeItem("nvDriverLoggedIn");
-  show("driverMessage", "🚪 Driver Logout successful।");
+function buyOwnerPass() {
+    appState.hasHotelPass = true;
+    appState.passExpiry = "Active (Expires in 30 Days)";
+    document.getElementById('pass-badge').innerText = appState.passExpiry;
+    document.getElementById('pass-badge').style.color = '#34c759';
+    alert("💳 ₹1,000 Subscription Active! Dynamic Hotel Listing Controls Unlocked.");
 }
 
-
-// ===============================
-// RIDE BOOKING
-// ===============================
-
-function bookRide() {
-  const pickup = document.getElementById("pickup").value.trim();
-  const drop = document.getElementById("drop").value.trim();
-  const date = document.getElementById("date").value;
-  const time = document.getElementById("time").value;
-  const vehicle = document.getElementById("vehicle").value;
-
-  if (!pickup || !drop || !date || !time || !vehicle) {
-    show(
-      "rideMessage",
-      "कृपया Pickup, Drop, Date, Time और Vehicle भरें।"
-    );
-    return;
-  }
-
-  const ride = {
-    id: Date.now(),
-    pickup,
-    drop,
-    date,
-    time,
-    vehicle,
-    status: "Available"
-  };
-
-  const rides = JSON.parse(
-    localStorage.getItem("nvRides") || "[]"
-  );
-
-  rides.push(ride);
-
-  localStorage.setItem("nvRides", JSON.stringify(rides));
-
-  show(
-    "rideMessage",
-    "✅ Ride request successfully बनाई गई!"
-  );
-
-  refreshRides();
+function handleHotelAdd() {
+    if(!appState.hasHotelPass) {
+        alert("⚠️ Access Denied! Please purchase the ₹1,000/month Active Pass to unlock registration control systems.");
+        return;
+    }
+    const name = document.getElementById('h-name').value;
+    const price = document.getElementById('h-price').value;
+    if(!name || !price) {
+        alert("Fill complete room metadata.");
+        return;
+    }
+    alert(`🎉 Successfully listed '${name}' rooms at ₹${price}/night on Puri Feed!`);
 }
 
-
-// ===============================
-// DRIVER RIDE REQUESTS
-// ===============================
-
-function refreshRides() {
-  const box = document.getElementById("rideRequests");
-
-  if (!box) return;
-
-  const rides = JSON.parse(
-    localStorage.getItem("nvRides") || "[]"
-  );
-
-  if (rides.length === 0) {
-    box.innerHTML = "<p>अभी कोई ride request नहीं है।</p>";
-    return;
-  }
-
-  box.innerHTML = "";
-
-  rides.forEach(function(ride) {
-
-    const div = document.createElement("div");
-
-    div.className = "card";
-
-    div.innerHTML = `
-      <h3>🚕 Ride #${ride.id}</h3>
-      <p><strong>Pickup:</strong> ${ride.pickup}</p>
-      <p><strong>Drop:</strong> ${ride.drop}</p>
-      <p><strong>Date:</strong> ${ride.date}</p>
-      <p><strong>Time:</strong> ${ride.time}</p>
-      <p><strong>Vehicle:</strong> ${ride.vehicle}</p>
-      <p><strong>Status:</strong> ${ride.status}</p>
-
-      ${
-        ride.status === "Available"
-          ? `<button onclick="acceptRide(${ride.id})">
-               ✅ Accept Ride
-             </button>`
-          : ""
-      }
-    `;
-
-    box.appendChild(div);
-  });
+function triggerSocialAction(actionType) {
+    alert(`Dynamic Social Feed Event: Post ${actionType} registered.`);
 }
 
-
-// ===============================
-// ACCEPT RIDE
-// ===============================
-
-function acceptRide(id) {
-  const loggedIn =
-    localStorage.getItem("nvDriverLoggedIn");
-
-  if (loggedIn !== "true") {
-    show(
-      "driverMessage",
-      "🔐 पहले Driver Login करें।"
-    );
-    return;
-  }
-
-  const rides = JSON.parse(
-    localStorage.getItem("nvRides") || "[]"
-  );
-
-  const ride = rides.find(function(item) {
-    return item.id === id;
-  });
-
-  if (!ride) {
-    show("driverMessage", "❌ Ride नहीं मिली।");
-    return;
-  }
-
-  ride.status = "Accepted";
-
-  localStorage.setItem(
-    "nvRides",
-    JSON.stringify(rides)
-  );
-
-  show(
-    "driverMessage",
-    "✅ Ride successfully accepted!"
-  );
-
-  refreshRides();
-}
-
-
-// ===============================
-// HOTEL
-// ===============================
-
-function bookHotel() {
-  const city =
-    document.getElementById("hotelCity").value.trim();
-
-  const checkin =
-    document.getElementById("checkin").value;
-
-  const checkout =
-    document.getElementById("checkout").value;
-
-  if (!city || !checkin || !checkout) {
-    show(
-      "hotelMessage",
-      "कृपया City, Check-in और Check-out भरें।"
-    );
-    return;
-  }
-
-  show(
-    "hotelMessage",
-    "🏨 Hotel booking request तैयार है!"
-  );
-}
-
-function skipHotel() {
-  show(
-    "hotelMessage",
-    "⏭️ Hotel booking skipped।"
-  );
-}
-
-
-// ===============================
-// SOCIAL
-// ===============================
-
-function social() {
-  show(
-    "socialMessage",
-    "📱 Social section जल्द उपलब्ध होगा।"
-  );
-}
-
-
-// ===============================
-// HELPER
-// ===============================
-
-function show(id, message) {
-  const element = document.getElementById(id);
-
-  if (element) {
-    element.textContent = message;
-  }
-}
-
-
-// ===============================
-// LOAD RIDES
-// ===============================
-
-document.addEventListener("DOMContentLoaded", function() {
-  refreshRides();
-});
+function logout() {
+    appState.isLoggedIn = false;
+    document.getElementById('global-nav').style.display = 'none';
+    switchTab('login');
+               }
