@@ -8,131 +8,224 @@
 </head>
 <body>
 
-    <!-- MODULAR SYSTEM SCREENS LAYER -->
-
-    <!-- SCREEN 1: CORE GATEWAY AUTHENTICATION -->
+    <!-- LOGIN -->
     <div id="screen-login" class="screen active-screen">
         <div class="auth-container">
             <div class="logo">🚕 NV Travels</div>
-            <div class="tagline">Puri App — Taxi • Hotel • Social</div>
-            
+            <div class="tagline">Taxi • Hotel • Social</div>
+
             <div class="card">
                 <div class="role-selector">
                     <button class="role-btn active" onclick="setRole('customer')">CUSTOMER</button>
                     <button class="role-btn" onclick="setRole('driver')">DRIVER</button>
                     <button class="role-btn" onclick="setRole('owner')">HOTEL OWNER</button>
                 </div>
-                
-                <h3 id="auth-title" style="margin-bottom: 15px; font-size:14px; text-align: center; color:#FFD700;">CUSTOMER ACCESS PORTAL</h3>
-                
+
+                <h3 id="auth-title">CUSTOMER ACCESS PORTAL</h3>
+
                 <div class="input-group">
-                    <input type="tel" id="auth-phone" placeholder="Enter Phone Number / Email">
+                    <input type="tel" id="auth-phone" placeholder="Enter Phone Number">
                 </div>
+
                 <div class="input-group">
                     <input type="password" id="auth-pass" placeholder="Password">
                 </div>
-                
-                <button class="main-btn" onclick="handleAuth()">Login / Verify OTP</button>
-                <div class="switch-auth" style="color: #aeaeae; text-align:center; font-size:13px; margin-top:15px;">Forgot Password?</div>
+
+                <button class="main-btn" onclick="handleAuth()">
+                    Login / Verify OTP
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- SCREEN 2: CUSTOMER CONSOLE -->
+    <!-- CUSTOMER -->
     <div id="screen-home" class="screen">
-        <h2 style="margin-bottom: 15px;">Book Dynamic Ride</h2>
+        <h2>Book Your Ride</h2>
+
         <div class="map-box">
             <div style="text-align:center; font-size:13px; color:#8e8e93;">
-                📍 <b>GPS Telemetry Feed Active</b><br>Mapping Nearby Drivers in Puri Area
+                📍 Nearby drivers
+                <br>
+                GPS location will appear here
             </div>
         </div>
+
         <div class="card">
-            <div class="input-group"><input type="text" id="pickup" placeholder="Enter Pickup Location"></div>
-            <div class="input-group"><input type="text" id="drop" placeholder="Enter Destination"></div>
-            <button class="main-btn" onclick="calculateFare()">Compute Optimal Fare</button>
-            
-            <div id="fare-window" style="display:none; justify-content:space-between; margin-top:15px; font-weight:bold; background:#2c2c2e; padding:12px; border-radius:8px;">
-                <span>15% Commission Included Fare:</span>
+            <div class="input-group">
+                <input type="text" id="pickup" placeholder="Enter Pickup Location">
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="drop" placeholder="Enter Destination">
+            </div>
+
+            <button class="main-btn" onclick="calculateFare()">
+                Calculate Ride Fare
+            </button>
+
+            <!-- CUSTOMER SE COMMISSION NAHI -->
+            <div id="fare-window"
+                 style="display:none; justify-content:space-between; margin-top:15px; font-weight:bold; background:#2c2c2e; padding:12px; border-radius:8px;">
+                <span>Estimated Ride Fare:</span>
                 <span id="fare-amount" style="color:#FFD700;">₹0.00</span>
             </div>
-            <button id="request-btn" class="secondary-btn" style="display:none; background:#fff; color:#000;" onclick="sendDriverRequest()">Broadcast Request</button>
+
+            <button id="request-btn"
+                    class="secondary-btn"
+                    style="display:none; background:#fff; color:#000;"
+                    onclick="sendDriverRequest()">
+                Book Ride
+            </button>
         </div>
     </div>
 
-    <!-- SCREEN 3: DRIVER MODULE ENGINE -->
+    <!-- DRIVER -->
     <div id="screen-driver-panel" class="screen">
         <h2>🚕 Driver Control Desk</h2>
-        <p style="color:#8e8e93; font-size:13px; margin-bottom:15px;">Flat 15% System Fee Deducted Post-Trip</p>
-        
+
+        <p style="color:#8e8e93; font-size:13px; margin-bottom:15px;">
+            NV Travels commission: 15% of completed ride fare
+        </p>
+
         <div class="stat-grid">
-            <div class="stat-card"><div>Completed Rides</div><div id="drv-rides" class="stat-val">0</div></div>
-            <div class="stat-card"><div>Net Earnings (85%)</div><div id="drv-earnings" class="stat-val">₹0.00</div></div>
+            <div class="stat-card">
+                <div>Completed Rides</div>
+                <div id="drv-rides" class="stat-val">0</div>
+            </div>
+
+            <div class="stat-card">
+                <div>Driver Earnings</div>
+                <div id="drv-earnings" class="stat-val">₹0.00</div>
+            </div>
         </div>
-        <button class="main-btn" style="background:#34c759; color:#fff;" onclick="alert('System Matrix status set to ONLINE')">Toggle Duty: ONLINE</button>
+
+        <button class="main-btn"
+                style="background:#34c759; color:#fff;"
+                onclick="alert('🚕 Driver is now ONLINE')">
+            Toggle Duty: ONLINE
+        </button>
     </div>
 
-    <!-- SCREEN 4: HOTEL MARKETPLACE CONTROL -->
+    <!-- HOTELS -->
     <div id="screen-hotels" class="screen">
-        <h2>🏨 Premium Stays & Bookings</h2>
-        <div class="card" style="margin-bottom: 15px;">
-            <h4>Active Listings in Puri</h4>
+        <h2>🏨 Hotels & Stays</h2>
+
+        <div class="card">
+            <h4>Active Hotel Listings</h4>
+
             <div style="margin-top:10px; font-size:14px; background:#2c2c2e; padding:10px; border-radius:8px;">
-                🏨 Mayfair Waves Puri — ⭐ 4.8<br><span style="color:#FFD700;">₹6,500/night</span>
+                🏨 Mayfair Waves Puri
+                <br>
+                ⭐ 4.8
+                <br>
+                <span style="color:#FFD700;">₹6,500/night</span>
             </div>
         </div>
     </div>
 
-    <!-- SCREEN 5: OWNER SUITE & PASS CONFIG -->
+    <!-- HOTEL OWNER -->
     <div id="screen-owner-panel" class="screen">
-        <h2>🏢 Owner Management Console</h2>
-        <div class="card" style="margin-bottom:15px;">
-            <h4>₹1,000/Month Business Pass</h4>
-            <p style="font-size:12px; color:#8e8e93; margin:5px 0 10px 0;">Required to register property elements and update availability calendars.</p>
-            <div style="font-size:14px; font-weight:bold;">Status: <span id="pass-badge" style="color:#ff3b30;">Not Active</span></div>
-            <button class="secondary-btn" onclick="buyOwnerPass()">Activate 30-Day Pass</button>
-        </div>
-        
+        <h2>🏢 Hotel Owner Console</h2>
+
         <div class="card">
+            <h4>₹1,000 / Month Business Pass</h4>
+
+            <p style="font-size:12px; color:#8e8e93; margin:5px 0 10px;">
+                Required to register and manage hotel listings.
+            </p>
+
+            <div style="font-size:14px; font-weight:bold;">
+                Status:
+                <span id="pass-badge" style="color:#ff3b30;">
+                    Not Active
+                </span>
+            </div>
+
+            <button class="secondary-btn" onclick="buyOwnerPass()">
+                Activate 30-Day Pass
+            </button>
+        </div>
+
+        <div class="card" style="margin-top:15px;">
             <h4>List New Property</h4>
-            <div class="input-group" style="margin-top:10px;"><input type="text" id="h-name" placeholder="Hotel Name"></div>
-            <div class="input-group"><input type="number" id="h-price" placeholder="Price Per Night"></div>
-            <button class="main-btn" onclick="handleHotelAdd()">Publish Listing</button>
+
+            <div class="input-group" style="margin-top:10px;">
+                <input type="text" id="h-name" placeholder="Hotel Name">
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="h-price" placeholder="Price Per Night">
+            </div>
+
+            <button class="main-btn" onclick="handleHotelAdd()">
+                Publish Listing
+            </button>
         </div>
     </div>
 
-    <!-- SCREEN 6: INSTAGRAM SOCIAL FEED CONTAINER -->
+    <!-- SOCIAL -->
     <div id="screen-social" class="screen">
         <h2>🌍 Travel Social Feed</h2>
+
         <div class="feed-card" style="margin-top:15px;">
-            <div class="feed-header">👤 puri_traveler_2026</div>
-            <div class="feed-img" style="display:flex; justify-content:center; align-items:center; color:#666;">🌅 [Beautiful Jagannath Temple View]</div>
+            <div class="feed-header">
+                👤 puri_traveler_2026
+            </div>
+
+            <div class="feed-img"
+                 style="display:flex; justify-content:center; align-items:center; color:#666;">
+                🌅 Travel Photo
+            </div>
+
             <div class="feed-actions">
                 <span onclick="triggerSocialAction('Like')">❤️</span>
                 <span onclick="triggerSocialAction('Comment')">💬</span>
                 <span onclick="triggerSocialAction('Share')">✈️</span>
             </div>
+
             <div class="feed-details">
-                <b>puri_traveler_2026</b> Morning rituals completed at the holy beach! #PuriTrips
+                <b>puri_traveler_2026</b>
+                Morning travel update! #PuriTrips
             </div>
         </div>
     </div>
 
-    <!-- SCREEN 7: UTILITY PROFILE SYSTEM -->
+    <!-- PROFILE -->
     <div id="screen-profile" class="screen">
-        <h2>👤 System Profile Matrix</h2>
+        <h2>👤 Profile</h2>
+
         <div class="card" style="margin-top:15px; text-align:center;">
             <div style="font-size:50px;">👤</div>
-            <h4 style="margin:10px 0;">NV System Account Node</h4>
-            <button class="main-btn" style="background:#ff3b30; color:#fff;" onclick="logout()">Terminate Session (Logout)</button>
+
+            <h4 style="margin:10px 0;">
+                NV Travels Account
+            </h4>
+
+            <button class="main-btn"
+                    style="background:#ff3b30; color:#fff;"
+                    onclick="logout()">
+                Logout
+            </button>
         </div>
     </div>
 
-    <!-- COMPREHENSIVE BOTTOM RUNTIME NAVIGATION CONTROLLER -->
-    <div id="global-nav" class="bottom-nav" style="display: none;">
-        <button id="tab-home" class="nav-item" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Home</button>
-        <button id="tab-hotels" class="nav-item" onclick="switchTab('hotels')"><span class="nav-icon">🏨</span>Hotels</button>
-        <button id="tab-social" class="nav-item" onclick="switchTab('social')"><span class="nav-icon">🌍</span>Social</button>
-        <button id="tab-profile" class="nav-item" onclick="switchTab('profile')"><span class="nav-icon">👤</span>Profile</button>
+    <!-- NAVIGATION -->
+    <div id="global-nav" class="bottom-nav" style="display:none;">
+        <button id="tab-home" class="nav-item" onclick="switchTab('home')">
+            <span class="nav-icon">🏠</span>Home
+        </button>
+
+        <button id="tab-hotels" class="nav-item" onclick="switchTab('hotels')">
+            <span class="nav-icon">🏨</span>Hotels
+        </button>
+
+        <button id="tab-social" class="nav-item" onclick="switchTab('social')">
+            <span class="nav-icon">🌍</span>Social
+        </button>
+
+        <button id="tab-profile" class="nav-item" onclick="switchTab('profile')">
+            <span class="nav-icon">👤</span>Profile
+        </button>
     </div>
 
     <script src="script.js"></script>
