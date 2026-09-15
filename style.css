@@ -2,7 +2,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI',
+        Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
@@ -23,8 +24,15 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Auth Styling */
@@ -84,11 +92,19 @@ body {
     color: #000;
 }
 
+#auth-title {
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+    color: #FFD700;
+}
+
 .input-group {
     margin-bottom: 16px;
 }
 
-.input-group input, .input-group select {
+.input-group input,
+.input-group select {
     width: 100%;
     background: #2c2c2e;
     border: 1px solid #3a3a3c;
@@ -97,6 +113,10 @@ body {
     border-radius: 12px;
     font-size: 15px;
     outline: none;
+}
+
+.input-group input::placeholder {
+    color: #8e8e93;
 }
 
 .main-btn {
@@ -125,7 +145,7 @@ body {
     cursor: pointer;
 }
 
-/* Simulated Map */
+/* Map */
 .map-box {
     width: 100%;
     height: 180px;
@@ -138,7 +158,7 @@ body {
     border: 1px dashed #48484a;
 }
 
-/* Grid & List Styles */
+/* Grid */
 .section-title {
     font-size: 18px;
     font-weight: 700;
@@ -167,7 +187,7 @@ body {
     margin-top: 5px;
 }
 
-/* Social Feed Elements */
+/* Social Feed */
 .feed-card {
     background: #1c1c1e;
     border-radius: 16px;
@@ -197,12 +217,16 @@ body {
     font-size: 20px;
 }
 
+.feed-actions span {
+    cursor: pointer;
+}
+
 .feed-details {
     padding: 0 12px 12px 12px;
     font-size: 14px;
 }
 
-/* Fixed Navigation */
+/* Bottom Navigation */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -237,4 +261,29 @@ body {
 .nav-icon {
     font-size: 22px;
     margin-bottom: 2px;
+}
+
+/* Mobile Optimization */
+@media (max-width: 480px) {
+    .screen {
+        padding: 16px;
+    }
+
+    .logo {
+        font-size: 34px;
+    }
+
+    .card {
+        padding: 18px;
+    }
+
+    .role-btn {
+        font-size: 10px;
+        padding: 10px 5px;
+    }
+
+    .main-btn {
+        padding: 14px;
+        font-size: 15px;
+    }
 }
