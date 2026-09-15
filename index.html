@@ -1,161 +1,140 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NV Travels</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NV Travels - Mobile Console</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<header>
-  <h1>🚕 NV Travels</h1>
-  <p>Taxi • Driver • Hotel • Travel</p>
-</header>
+    <!-- MODULAR SYSTEM SCREENS LAYER -->
 
-<main>
-
-  <!-- CUSTOMER RIDE -->
-  <section class="card">
-    <h2>🚕 Book a Ride</h2>
-
-    <input type="text" id="pickup" placeholder="Pickup Location">
-
-    <input type="text" id="drop" placeholder="Drop Location">
-
-    <input type="date" id="date">
-
-    <input type="time" id="time">
-
-    <select id="vehicle">
-      <option value="">Select Vehicle</option>
-      <option>Car</option>
-      <option>SUV</option>
-      <option>Taxi</option>
-      <option>Tempo Traveller</option>
-    </select>
-
-    <button onclick="bookRide()">🚕 Book Ride</button>
-
-    <p id="rideMessage"></p>
-  </section>
-
-
-  <!-- HOTEL -->
-  <section class="card">
-    <h2>🏨 Hotel Booking</h2>
-
-    <p>क्या आपको hotel book करनी है?</p>
-
-    <input type="text" id="hotelCity" placeholder="Enter City">
-
-    <input type="date" id="checkin">
-
-    <input type="date" id="checkout">
-
-    <button onclick="bookHotel()">🏨 Book Hotel</button>
-
-    <button onclick="skipHotel()" style="margin-top:10px;">
-      ⏭️ Skip Hotel Booking
-    </button>
-
-    <p id="hotelMessage"></p>
-  </section>
-
-
-  <!-- CUSTOMER ACCOUNT -->
-  <section class="card">
-    <h2>👤 Customer Account</h2>
-
-    <input type="text" id="userName" placeholder="Your Name">
-
-    <input type="tel" id="userMobile" placeholder="Mobile Number">
-
-    <input type="password" id="userPassword" placeholder="Password">
-
-    <button onclick="registerUser()">🆕 Create Account</button>
-
-    <button onclick="loginUser()" style="margin-top:10px;">
-      🔐 Login
-    </button>
-
-    <button onclick="logoutUser()" style="margin-top:10px;">
-      🚪 Logout
-    </button>
-
-    <p id="accountMessage"></p>
-  </section>
-
-
-  <!-- DRIVER -->
-  <section class="card">
-    <h2>🚗 Driver Account</h2>
-
-    <input type="text" id="driverName" placeholder="Driver Name">
-
-    <input type="tel" id="driverMobile" placeholder="Mobile Number">
-
-    <input type="password" id="driverPassword" placeholder="Password">
-
-    <select id="driverVehicle">
-      <option value="">Select Vehicle</option>
-      <option>Car</option>
-      <option>SUV</option>
-      <option>Taxi</option>
-      <option>Tempo Traveller</option>
-    </select>
-
-    <input type="text" id="vehicleNumber" placeholder="Vehicle Number">
-
-    <button onclick="registerDriver()">🆕 Driver Registration</button>
-
-    <button onclick="loginDriver()" style="margin-top:10px;">
-      🔐 Driver Login
-    </button>
-
-    <button onclick="logoutDriver()" style="margin-top:10px;">
-      🚪 Driver Logout
-    </button>
-
-    <p id="driverMessage"></p>
-  </section>
-
-
-  <!-- DRIVER RIDE REQUESTS -->
-  <section class="card">
-    <h2>📋 Available Ride Requests</h2>
-
-    <div id="rideRequests">
-      <p>अभी कोई ride request नहीं है।</p>
+    <!-- SCREEN 1: CORE GATEWAY AUTHENTICATION -->
+    <div id="screen-login" class="screen active-screen">
+        <div class="auth-container">
+            <div class="logo">🚕 NV Travels</div>
+            <div class="tagline">Puri App — Taxi • Hotel • Social</div>
+            
+            <div class="card">
+                <div class="role-selector">
+                    <button class="role-btn active" onclick="setRole('customer')">CUSTOMER</button>
+                    <button class="role-btn" onclick="setRole('driver')">DRIVER</button>
+                    <button class="role-btn" onclick="setRole('owner')">HOTEL OWNER</button>
+                </div>
+                
+                <h3 id="auth-title" style="margin-bottom: 15px; font-size:14px; text-align: center; color:#FFD700;">CUSTOMER ACCESS PORTAL</h3>
+                
+                <div class="input-group">
+                    <input type="tel" id="auth-phone" placeholder="Enter Phone Number / Email">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="auth-pass" placeholder="Password">
+                </div>
+                
+                <button class="main-btn" onclick="handleAuth()">Login / Verify OTP</button>
+                <div class="switch-auth" style="color: #aeaeae; text-align:center; font-size:13px; margin-top:15px;">Forgot Password?</div>
+            </div>
+        </div>
     </div>
 
-    <button onclick="refreshRides()" style="margin-top:10px;">
-      🔄 Refresh Rides
-    </button>
-  </section>
+    <!-- SCREEN 2: CUSTOMER CONSOLE -->
+    <div id="screen-home" class="screen">
+        <h2 style="margin-bottom: 15px;">Book Dynamic Ride</h2>
+        <div class="map-box">
+            <div style="text-align:center; font-size:13px; color:#8e8e93;">
+                📍 <b>GPS Telemetry Feed Active</b><br>Mapping Nearby Drivers in Puri Area
+            </div>
+        </div>
+        <div class="card">
+            <div class="input-group"><input type="text" id="pickup" placeholder="Enter Pickup Location"></div>
+            <div class="input-group"><input type="text" id="drop" placeholder="Enter Destination"></div>
+            <button class="main-btn" onclick="calculateFare()">Compute Optimal Fare</button>
+            
+            <div id="fare-window" style="display:none; justify-content:space-between; margin-top:15px; font-weight:bold; background:#2c2c2e; padding:12px; border-radius:8px;">
+                <span>15% Commission Included Fare:</span>
+                <span id="fare-amount" style="color:#FFD700;">₹0.00</span>
+            </div>
+            <button id="request-btn" class="secondary-btn" style="display:none; background:#fff; color:#000;" onclick="sendDriverRequest()">Broadcast Request</button>
+        </div>
+    </div>
 
+    <!-- SCREEN 3: DRIVER MODULE ENGINE -->
+    <div id="screen-driver-panel" class="screen">
+        <h2>🚕 Driver Control Desk</h2>
+        <p style="color:#8e8e93; font-size:13px; margin-bottom:15px;">Flat 15% System Fee Deducted Post-Trip</p>
+        
+        <div class="stat-grid">
+            <div class="stat-card"><div>Completed Rides</div><div id="drv-rides" class="stat-val">0</div></div>
+            <div class="stat-card"><div>Net Earnings (85%)</div><div id="drv-earnings" class="stat-val">₹0.00</div></div>
+        </div>
+        <button class="main-btn" style="background:#34c759; color:#fff;" onclick="alert('System Matrix status set to ONLINE')">Toggle Duty: ONLINE</button>
+    </div>
 
-  <!-- SOCIAL -->
-  <section class="card">
-    <h2>📱 NV Travels Social</h2>
+    <!-- SCREEN 4: HOTEL MARKETPLACE CONTROL -->
+    <div id="screen-hotels" class="screen">
+        <h2>🏨 Premium Stays & Bookings</h2>
+        <div class="card" style="margin-bottom: 15px;">
+            <h4>Active Listings in Puri</h4>
+            <div style="margin-top:10px; font-size:14px; background:#2c2c2e; padding:10px; border-radius:8px;">
+                🏨 Mayfair Waves Puri — ⭐ 4.8<br><span style="color:#FFD700;">₹6,500/night</span>
+            </div>
+        </div>
+    </div>
 
-    <p>Travel posts और videos share करें।</p>
+    <!-- SCREEN 5: OWNER SUITE & PASS CONFIG -->
+    <div id="screen-owner-panel" class="screen">
+        <h2>🏢 Owner Management Console</h2>
+        <div class="card" style="margin-bottom:15px;">
+            <h4>₹1,000/Month Business Pass</h4>
+            <p style="font-size:12px; color:#8e8e93; margin:5px 0 10px 0;">Required to register property elements and update availability calendars.</p>
+            <div style="font-size:14px; font-weight:bold;">Status: <span id="pass-badge" style="color:#ff3b30;">Not Active</span></div>
+            <button class="secondary-btn" onclick="buyOwnerPass()">Activate 30-Day Pass</button>
+        </div>
+        
+        <div class="card">
+            <h4>List New Property</h4>
+            <div class="input-group" style="margin-top:10px;"><input type="text" id="h-name" placeholder="Hotel Name"></div>
+            <div class="input-group"><input type="number" id="h-price" placeholder="Price Per Night"></div>
+            <button class="main-btn" onclick="handleHotelAdd()">Publish Listing</button>
+        </div>
+    </div>
 
-    <button onclick="social()">📱 Open Social</button>
+    <!-- SCREEN 6: INSTAGRAM SOCIAL FEED CONTAINER -->
+    <div id="screen-social" class="screen">
+        <h2>🌍 Travel Social Feed</h2>
+        <div class="feed-card" style="margin-top:15px;">
+            <div class="feed-header">👤 puri_traveler_2026</div>
+            <div class="feed-img" style="display:flex; justify-content:center; align-items:center; color:#666;">🌅 [Beautiful Jagannath Temple View]</div>
+            <div class="feed-actions">
+                <span onclick="triggerSocialAction('Like')">❤️</span>
+                <span onclick="triggerSocialAction('Comment')">💬</span>
+                <span onclick="triggerSocialAction('Share')">✈️</span>
+            </div>
+            <div class="feed-details">
+                <b>puri_traveler_2026</b> Morning rituals completed at the holy beach! #PuriTrips
+            </div>
+        </div>
+    </div>
 
-    <p id="socialMessage"></p>
-  </section>
+    <!-- SCREEN 7: UTILITY PROFILE SYSTEM -->
+    <div id="screen-profile" class="screen">
+        <h2>👤 System Profile Matrix</h2>
+        <div class="card" style="margin-top:15px; text-align:center;">
+            <div style="font-size:50px;">👤</div>
+            <h4 style="margin:10px 0;">NV System Account Node</h4>
+            <button class="main-btn" style="background:#ff3b30; color:#fff;" onclick="logout()">Terminate Session (Logout)</button>
+        </div>
+    </div>
 
-</main>
+    <!-- COMPREHENSIVE BOTTOM RUNTIME NAVIGATION CONTROLLER -->
+    <div id="global-nav" class="bottom-nav" style="display: none;">
+        <button id="tab-home" class="nav-item" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Home</button>
+        <button id="tab-hotels" class="nav-item" onclick="switchTab('hotels')"><span class="nav-icon">🏨</span>Hotels</button>
+        <button id="tab-social" class="nav-item" onclick="switchTab('social')"><span class="nav-icon">🌍</span>Social</button>
+        <button id="tab-profile" class="nav-item" onclick="switchTab('profile')"><span class="nav-icon">👤</span>Profile</button>
+    </div>
 
-
-<footer>
-  <p>© 2026 NV Travels</p>
-  <p>📞 9098533390</p>
-</footer>
-
-<script src="script.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
