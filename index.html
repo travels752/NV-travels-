@@ -2,300 +2,477 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NV Travels - Mobile Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NV Travels</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <!-- LOGIN -->
-    <div id="screen-login" class="screen active-screen">
+    <!-- LOGIN SCREEN -->
+    <section id="screen-login" class="screen active-screen">
+
         <div class="auth-container">
-            <div class="logo">🚕 NV Travels</div>
-            <div class="tagline">Taxi • Hotel • Social</div>
+
+            <div class="logo">NV Travels</div>
+            <div class="tagline">Travel • Ride • Hotel • Packages</div>
 
             <div class="card">
+
                 <div class="role-selector">
-                    <button class="role-btn active" onclick="setRole('customer')">CUSTOMER</button>
-                    <button class="role-btn" onclick="setRole('driver')">DRIVER</button>
-                    <button class="role-btn" onclick="setRole('owner')">HOTEL OWNER</button>
+
+                    <button
+                        class="role-btn active"
+                        onclick="setRole('customer', this)">
+                        Customer
+                    </button>
+
+                    <button
+                        class="role-btn"
+                        onclick="setRole('driver', this)">
+                        Driver
+                    </button>
+
+                    <button
+                        class="role-btn"
+                        onclick="setRole('owner', this)">
+                        Hotel
+                    </button>
+
                 </div>
 
                 <h3 id="auth-title">CUSTOMER ACCESS PORTAL</h3>
 
                 <div class="input-group">
-                    <input type="tel" id="auth-phone" placeholder="Enter Phone Number">
+                    <input
+                        id="auth-phone"
+                        type="tel"
+                        placeholder="📱 Phone Number">
                 </div>
 
                 <div class="input-group">
-                    <input type="password" id="auth-pass" placeholder="Password">
+                    <input
+                        id="auth-pass"
+                        type="password"
+                        placeholder="🔐 Password">
                 </div>
 
                 <button class="main-btn" onclick="handleAuth()">
-                    Login / Verify OTP
+                    Login
                 </button>
-            </div>
-        </div>
-    </div>
 
-    <!-- CUSTOMER -->
-    <div id="screen-home" class="screen">
-        <h2>Book Your Ride</h2>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CUSTOMER HOME -->
+    <section id="screen-home" class="screen">
+
+        <h2 class="section-title">🚕 Book a Ride</h2>
 
         <div class="map-box">
-            <div style="text-align:center; font-size:13px; color:#8e8e93;">
-                📍 Nearby drivers
-                <br>
-                GPS location will appear here
-            </div>
+            📍 Map / Live Location
         </div>
 
         <div class="card">
+
             <div class="input-group">
-                <input type="text" id="pickup" placeholder="Enter Pickup Location">
+                <input
+                    id="pickup"
+                    type="text"
+                    placeholder="📍 Pickup Location">
             </div>
 
             <div class="input-group">
-                <input type="text" id="drop" placeholder="Enter Destination">
+                <input
+                    id="drop"
+                    type="text"
+                    placeholder="📍 Destination">
             </div>
 
             <button class="main-btn" onclick="calculateFare()">
                 Calculate Ride Fare
             </button>
 
-            <!-- CUSTOMER SE COMMISSION NAHI -->
-            <div id="fare-window"
-                 style="display:none; justify-content:space-between; margin-top:15px; font-weight:bold; background:#2c2c2e; padding:12px; border-radius:8px;">
-                <span>Estimated Ride Fare:</span>
-                <span id="fare-amount" style="color:#FFD700;">₹0.00</span>
+            <div
+                id="fare-window"
+                style="display:none; justify-content:space-between; align-items:center; margin-top:20px;">
+
+                <strong>Estimated Ride Fare</strong>
+
+                <strong id="fare-amount">
+                    ₹0.00
+                </strong>
+
             </div>
 
-            <button id="request-btn"
-                    class="secondary-btn"
-                    style="display:none; background:#fff; color:#000;"
-                    onclick="sendDriverRequest()">
-                Book Ride
+            <button
+                id="request-btn"
+                class="secondary-btn"
+                onclick="sendDriverRequest()"
+                style="display:none;">
+                🚗 Request Driver
             </button>
+
         </div>
-    </div>
 
-    <!-- DRIVER -->
-    <div id="screen-driver-panel" class="screen">
-        <h2>🚕 Driver Control Desk</h2>
+    </section>
 
-        <p style="color:#8e8e93; font-size:13px; margin-bottom:15px;">
-            NV Travels commission: 15% of completed ride fare
-        </p>
+
+    <!-- PACKAGES -->
+    <section id="screen-packages" class="screen">
+
+        <h2 class="section-title">📦 Travel Packages</h2>
+
+        <div class="card">
+
+            <div class="input-group">
+                <input
+                    id="package-from"
+                    type="text"
+                    placeholder="📍 Kahan se?">
+            </div>
+
+            <div class="input-group">
+                <input
+                    id="package-to"
+                    type="text"
+                    placeholder="📍 Kahan tak?">
+            </div>
+
+            <div class="input-group">
+                <input
+                    id="package-days"
+                    type="number"
+                    min="1"
+                    placeholder="📅 Kitne din?">
+            </div>
+
+            <div class="input-group">
+                <input
+                    id="package-passengers"
+                    type="number"
+                    min="1"
+                    placeholder="👥 Kitne passengers?">
+            </div>
+
+            <div class="input-group">
+                <select id="package-vehicle">
+
+                    <option value="">
+                        🚗 Vehicle select karo
+                    </option>
+
+                    <option>Car</option>
+                    <option>Sedan</option>
+                    <option>SUV</option>
+                    <option>Tempo Traveller</option>
+
+                </select>
+            </div>
+
+            <div class="input-group">
+                <select id="package-hotel">
+
+                    <option value="">
+                        🏨 Hotel included?
+                    </option>
+
+                    <option>Yes</option>
+                    <option>No</option>
+
+                </select>
+            </div>
+
+            <button
+                class="main-btn"
+                onclick="searchPackages()">
+
+                🔎 Package Search Karo
+
+            </button>
+
+        </div>
+
+        <div id="package-results"></div>
+
+    </section>
+
+
+    <!-- DRIVER PANEL -->
+    <section id="screen-driver-panel" class="screen">
+
+        <h2 class="section-title">🚗 Driver Control Desk</h2>
 
         <div class="stat-grid">
+
             <div class="stat-card">
                 <div>Completed Rides</div>
-                <div id="drv-rides" class="stat-val">0</div>
+                <div
+                    id="drv-rides"
+                    class="stat-val">
+                    0
+                </div>
             </div>
 
             <div class="stat-card">
                 <div>Driver Earnings</div>
-                <div id="drv-earnings" class="stat-val">₹0.00</div>
+                <div
+                    id="drv-earnings"
+                    class="stat-val">
+                    ₹0.00
+                </div>
             </div>
+
         </div>
 
-        <button class="main-btn"
-                style="background:#34c759; color:#fff;"
-                onclick="alert('🚕 Driver is now ONLINE')">
-            Toggle Duty: ONLINE
-        </button>
-    </div>
-
-    <!-- HOTELS -->
-    <div id="screen-hotels" class="screen">
-        <h2>🏨 Hotels & Stays</h2>
-
         <div class="card">
-            <h4>Active Hotel Listings</h4>
 
-            <div style="margin-top:10px; font-size:14px; background:#2c2c2e; padding:10px; border-radius:8px;">
-                🏨 Mayfair Waves Puri
-                <br>
-                ⭐ 4.8
-                <br>
-                <span style="color:#FFD700;">₹6,500/night</span>
-            </div>
-        </div>
-    </div>
+            <h3>Driver Commission</h3>
 
-    <!-- HOTEL OWNER -->
-    <div id="screen-owner-panel" class="screen">
-        <h2>🏢 Hotel Owner Console</h2>
-
-        <div class="card">
-            <h4>₹1,000 / Month Business Pass</h4>
-
-            <p style="font-size:12px; color:#8e8e93; margin:5px 0 10px;">
-                Required to register and manage hotel listings.
+            <p style="margin-top:10px;">
+                NV Travels commission: 15%
             </p>
 
-            <div style="font-size:14px; font-weight:bold;">
-                Status:
-                <span id="pass-badge" style="color:#ff3b30;">
-                    Not Active
-                </span>
-            </div>
+            <p style="margin-top:8px;">
+                Driver receives 85% of completed ride fare.
+            </p>
 
-            <button class="secondary-btn" onclick="buyOwnerPass()">
-                Activate 30-Day Pass
-            </button>
         </div>
 
-        <div class="card" style="margin-top:15px;">
-            <h4>List New Property</h4>
+    </section>
 
-            <div class="input-group" style="margin-top:10px;">
-                <input type="text" id="h-name" placeholder="Hotel Name">
+
+    <!-- HOTELS -->
+    <section id="screen-hotels" class="screen">
+
+        <h2 class="section-title">🏨 Hotels</h2>
+
+        <div class="card">
+
+            <h3>Find Hotels</h3>
+
+            <div class="input-group" style="margin-top:15px;">
+                <input
+                    type="text"
+                    placeholder="📍 City / Destination">
+            </div>
+
+            <button class="main-btn">
+                Search Hotels
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- HOTEL OWNER -->
+    <section id="screen-owner-panel" class="screen">
+
+        <h2 class="section-title">🏨 Hotel Owner Console</h2>
+
+        <div class="card">
+
+            <h3>Business Pass</h3>
+
+            <p style="margin-top:10px;">
+                Monthly Pass: ₹1,000
+            </p>
+
+            <p
+                id="pass-badge"
+                style="margin-top:8px;">
+                Not Active
+            </p>
+
+            <button
+                class="main-btn"
+                onclick="buyOwnerPass()"
+                style="margin-top:15px;">
+                Activate Business Pass
+            </button>
+
+        </div>
+
+
+        <div class="card" style="margin-top:15px;">
+
+            <h3>Add Hotel Listing</h3>
+
+            <div
+                class="input-group"
+                style="margin-top:15px;">
+
+                <input
+                    id="h-name"
+                    type="text"
+                    placeholder="🏨 Hotel Name">
+
             </div>
 
             <div class="input-group">
-                <input type="number" id="h-price" placeholder="Price Per Night">
+
+                <input
+                    id="h-price"
+                    type="number"
+                    placeholder="💰 Price per Night">
+
             </div>
 
-            <button class="main-btn" onclick="handleHotelAdd()">
-                Publish Listing
+            <button
+                class="main-btn"
+                onclick="handleHotelAdd()">
+
+                Add Hotel
+
             </button>
+
         </div>
-    </div>
+
+    </section>
+
 
     <!-- SOCIAL -->
-    <div id="screen-social" class="screen">
-        <h2>🌍 Travel Social Feed</h2>
+    <section id="screen-social" class="screen">
 
-        <div class="feed-card" style="margin-top:15px;">
+        <h2 class="section-title">🌍 NV Social</h2>
+
+        <div class="feed-card">
+
             <div class="feed-header">
-                👤 puri_traveler_2026
+                👤 NV Traveller
             </div>
 
-            <div class="feed-img"
-                 style="display:flex; justify-content:center; align-items:center; color:#666;">
-                🌅 Travel Photo
+            <div
+                class="feed-img"
+                style="display:flex; align-items:center; justify-content:center; font-size:50px;">
+
+                🏔️
+
             </div>
 
             <div class="feed-actions">
-                <span onclick="triggerSocialAction('Like')">❤️</span>
-                <span onclick="triggerSocialAction('Comment')">💬</span>
-                <span onclick="triggerSocialAction('Share')">✈️</span>
+
+                <span onclick="triggerSocialAction('Like')">
+                    ❤️
+                </span>
+
+                <span onclick="triggerSocialAction('Comment')">
+                    💬
+                </span>
+
+                <span onclick="triggerSocialAction('Share')">
+                    📤
+                </span>
+
             </div>
 
             <div class="feed-details">
-                <b>puri_traveler_2026</b>
-                Morning travel update! #PuriTrips
+                Beautiful travel destination!
             </div>
+
         </div>
-    </div>
+
+    </section>
+
 
     <!-- PROFILE -->
-    <div id="screen-profile" class="screen">
-        <h2>👤 Profile</h2>
+    <section id="screen-profile" class="screen">
 
-        <div class="card" style="margin-top:15px; text-align:center;">
-            <div style="font-size:50px;">👤</div>
+        <h2 class="section-title">👤 Profile</h2>
 
-            <h4 style="margin:10px 0;">
-                NV Travels Account
-            </h4>
+        <div class="card">
 
-            <button class="main-btn"
-                    style="background:#ff3b30; color:#fff;"
-                    onclick="logout()">
+            <h3>
+                Welcome to NV Travels
+            </h3>
+
+            <p style="margin-top:10px;">
+                Your account is ready.
+            </p>
+
+            <button
+                class="secondary-btn"
+                onclick="logout()">
+
                 Logout
+
             </button>
+
         </div>
-    </div>
 
-    <!-- NAVIGATION -->
-    <div id="global-nav" class="bottom-nav" style="display:none;">
-        <button id="tab-home" class="nav-item" onclick="switchTab('home')">
-            <span class="nav-icon">🏠</span>Home
+    </section>
+
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav
+        id="global-nav"
+        class="bottom-nav"
+        style="display:none;">
+
+        <button
+            id="tab-home"
+            class="nav-item active"
+            onclick="switchTab('home')">
+
+            <span class="nav-icon">🏠</span>
+            <span>Home</span>
+
         </button>
 
-        <button id="tab-hotels" class="nav-item" onclick="switchTab('hotels')">
-            <span class="nav-icon">🏨</span>Hotels
+
+        <button
+            id="tab-packages"
+            class="nav-item"
+            onclick="switchTab('packages')">
+
+            <span class="nav-icon">📦</span>
+            <span>Packages</span>
+
         </button>
 
-        <button id="tab-social" class="nav-item" onclick="switchTab('social')">
-            <span class="nav-icon">🌍</span>Social
+
+        <button
+            id="tab-hotels"
+            class="nav-item"
+            onclick="switchTab('hotels')">
+
+            <span class="nav-icon">🏨</span>
+            <span>Hotels</span>
+
         </button>
 
-        <button id="tab-profile" class="nav-item" onclick="switchTab('profile')">
-            <span class="nav-icon">👤</span>Profile
+
+        <button
+            id="tab-social"
+            class="nav-item"
+            onclick="switchTab('social')">
+
+            <span class="nav-icon">🌍</span>
+            <span>Social</span>
+
         </button>
-    </div>
+
+
+        <button
+            id="tab-profile"
+            class="nav-item"
+            onclick="switchTab('profile')">
+
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+
+        </button>
+
+    </nav>
+
 
     <script src="script.js"></script>
+
 </body>
 </html>
-<!-- PACKAGES -->
-<section id="screen-packages" class="screen">
-
-    <h2 class="section-title">📦 Travel Packages</h2>
-
-    <div class="card">
-
-        <div class="input-group">
-            <input
-                id="package-from"
-                type="text"
-                placeholder="📍 Kahan se?"
-            >
-        </div>
-
-        <div class="input-group">
-            <input
-                id="package-to"
-                type="text"
-                placeholder="📍 Kahan tak?"
-            >
-        </div>
-
-        <div class="input-group">
-            <input
-                id="package-days"
-                type="number"
-                min="1"
-                placeholder="📅 Kitne din?"
-            >
-        </div>
-
-        <div class="input-group">
-            <input
-                id="package-passengers"
-                type="number"
-                min="1"
-                placeholder="👥 Kitne passengers?"
-            >
-        </div>
-
-        <div class="input-group">
-            <select id="package-vehicle">
-                <option value="">🚗 Vehicle select karo</option>
-                <option>Car</option>
-                <option>Sedan</option>
-                <option>SUV</option>
-                <option>Tempo Traveller</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <select id="package-hotel">
-                <option value="">🏨 Hotel included?</option>
-                <option>Yes</option>
-                <option>No</option>
-            </select>
-        </div>
-
-        <button class="main-btn" onclick="searchPackages()">
-            🔎 Package Search Karo
-        </button>
-
-    </div>
-
-    <div id="package-results"></div>
-
-</section>
