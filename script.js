@@ -93,9 +93,67 @@ function skipHotel() {
     "⏭️ Hotel booking skipped.";
 }
 
-function driverLogin() {
+function registerDriver() {
+  const name = document.getElementById("driverName").value.trim();
+  const mobile = document.getElementById("driverMobile").value.trim();
+  const password = document.getElementById("driverPassword").value;
+  const vehicle = document.getElementById("driverVehicle").value;
+  const vehicleNumber = document.getElementById("vehicleNumber").value.trim();
+
+  if (!name || !mobile || !password || !vehicle || !vehicleNumber) {
+    document.getElementById("driverMessage").textContent =
+      "कृपया सभी Driver details भरें।";
+    return;
+  }
+
+  if (mobile.length !== 10) {
+    document.getElementById("driverMessage").textContent =
+      "कृपया 10 अंकों का Mobile Number डालें।";
+    return;
+  }
+
+  localStorage.setItem("nvDriver", JSON.stringify({
+    name,
+    mobile,
+    password,
+    vehicle,
+    vehicleNumber
+  }));
+
   document.getElementById("driverMessage").textContent =
-    "🚗 Driver Login जल्द जोड़ा जाएगा।";
+    "✅ Driver registration successful! अब Login करें।";
+}
+
+function loginDriver() {
+  const mobile = document.getElementById("driverMobile").value.trim();
+  const password = document.getElementById("driverPassword").value;
+
+  const savedDriver = localStorage.getItem("nvDriver");
+
+  if (!savedDriver) {
+    document.getElementById("driverMessage").textContent =
+      "❌ पहले Driver Registration करें।";
+    return;
+  }
+
+  const driver = JSON.parse(savedDriver);
+
+  if (mobile === driver.mobile && password === driver.password) {
+    localStorage.setItem("nvDriverLoggedIn", "true");
+
+    document.getElementById("driverMessage").textContent =
+      "✅ Driver Login successful! Welcome " + driver.name;
+  } else {
+    document.getElementById("driverMessage").textContent =
+      "❌ Mobile Number या Password गलत है।";
+  }
+}
+
+function logoutDriver() {
+  localStorage.removeItem("nvDriverLoggedIn");
+
+  document.getElementById("driverMessage").textContent =
+    "🚪 Driver Logout successful.";
 }
 
 function social() {
