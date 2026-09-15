@@ -2,20 +2,23 @@ let appState = {
     role: 'customer',
     isLoggedIn: false,
     userName: 'Traveler',
+    driverCommissionRate: 0.15,
     driverEarnings: 0,
     driverRides: 0,
     hasHotelPass: false,
     passExpiry: 'Not Active'
 };
 
-function setRole(role) {
+function setRole(role, button) {
     appState.role = role;
 
     document.querySelectorAll('.role-btn').forEach(btn => {
         btn.classList.remove('active');
     });
 
-    event.target.classList.add('active');
+    if (button) {
+        button.classList.add('active');
+    }
 
     document.getElementById('auth-title').innerText =
         role.toUpperCase() + " ACCESS PORTAL";
@@ -26,7 +29,7 @@ function handleAuth() {
     const pass = document.getElementById('auth-pass').value.trim();
 
     if (!phone || !pass) {
-        alert("🚨 Please fill all validation fields!");
+        alert("🚨 Please fill all fields.");
         return;
     }
 
@@ -40,9 +43,13 @@ function handleAuth() {
 
     if (appState.role === 'customer') {
         switchTab('home');
-    } else if (appState.role === 'driver') {
+    }
+
+    if (appState.role === 'driver') {
         switchTab('driver-panel');
-    } else if (appState.role === 'owner') {
+    }
+
+    if (appState.role === 'owner') {
         switchTab('owner-panel');
     }
 }
@@ -56,10 +63,10 @@ function switchTab(screenId) {
         item.classList.remove('active');
     });
 
-    const targetScreen = document.getElementById('screen-' + screenId);
+    const target = document.getElementById('screen-' + screenId);
 
-    if (targetScreen) {
-        targetScreen.classList.add('active-screen');
+    if (target) {
+        target.classList.add('active-screen');
     }
 
     if (screenId === 'home') {
@@ -80,24 +87,23 @@ function switchTab(screenId) {
 }
 
 function calculateFare() {
-    const pick = document.getElementById('pickup').value.trim();
+    const pickup = document.getElementById('pickup').value.trim();
     const drop = document.getElementById('drop').value.trim();
 
-    if (!pick || !drop) {
+    if (!pickup || !drop) {
         alert("📍 Please enter pickup and destination.");
         return;
     }
 
-    const baseFare =
-        Math.floor(Math.random() * (600 - 200 + 1)) + 200;
+    const fare = Math.floor(Math.random() * 401) + 200;
+
+    window.lastCalculatedFare = fare;
 
     document.getElementById('fare-amount').innerText =
-        "₹" + baseFare.toFixed(2);
+        "₹" + fare.toFixed(2);
 
     document.getElementById('fare-window').style.display = 'flex';
     document.getElementById('request-btn').style.display = 'block';
-
-    window.lastCalculatedFare = baseFare;
 }
 
 function sendDriverRequest() {
@@ -106,59 +112,68 @@ function sendDriverRequest() {
         return;
     }
 
+    const fare = window.lastCalculatedFare;
+
     alert(
-        "📡 Syncing live GPS telemetry...\n" +
-        "Sending request to nearby drivers."
+        "📡 Ride request sent to nearby drivers.\n\n" +
+        "Customer Fare: ₹" + fare.toFixed(2)
     );
 
     setTimeout(() => {
-        const fare = window.lastCalculatedFare;
 
-        alert(
-            `✅ Ride Accepted by Driver!\n` +
-            `Estimated Fare: ₹${fare.toFixed(2)}\n` +
-            `15% system fee will be applied after the trip.`
-        );
+        const nvCommission =
+            fare * appState.driverCommissionRate;
+
+        const driverEarning =
+            fare - nvCommission;
 
         appState.driverRides += 1;
-
-        const driverCut = fare * 0.85;
-        appState.driverEarnings += driverCut;
+        appState.driverEarnings += driverEarning;
 
         document.getElementById('drv-rides').innerText =
             appState.driverRides;
 
         document.getElementById('drv-earnings').innerText =
             "₹" + appState.driverEarnings.toFixed(2);
+
+        alert(
+            "✅ Ride Accepted!\n\n" +
+            "Customer Fare: ₹" + fare.toFixed(2) + "\n" +
+            "NV Travels Commission: ₹" +
+            nvCommission.toFixed(2) + "\n" +
+            "Driver Earnings: ₹" +
+            driverEarning.toFixed(2)
+        );
+
     }, 2000);
 }
 
 function buyOwnerPass() {
     appState.hasHotelPass = true;
-    appState.passExpiry = "Active (Expires in 30 Days)";
+    appState.passExpiry = "Active (30 Days)";
 
     document.getElementById('pass-badge').innerText =
         appState.passExpiry;
 
-    document.getElementById('pass-badge').style.color = '#34c759';
+    document.getElementById('pass-badge').style.color =
+        '#34c759';
 
-    alert(
-        "💳 ₹1,000 subscription activated!\n" +
-        "Hotel listing controls are unlocked."
-    );
+    alert("💳 ₹1,000 Business Pass activated.");
 }
 
 function handleHotelAdd() {
     if (!appState.hasHotelPass) {
         alert(
-            "⚠️ Access Denied!\n" +
-            "Please activate the ₹1,000/month hotel owner pass first."
+            "⚠️ Please activate the ₹1,000/month Business Pass first."
         );
         return;
     }
 
-    const name = document.getElementById('h-name').value.trim();
-    const price = document.getElementById('h-price').value.trim();
+    const name =
+        document.getElementById('h-name').value.trim();
+
+    const price =
+        document.getElementById('h-price').value.trim();
 
     if (!name || !price) {
         alert("🏨 Please enter hotel name and price.");
@@ -166,13 +181,14 @@ function handleHotelAdd() {
     }
 
     alert(
-        `🎉 Successfully listed "${name}"\n` +
-        `Price: ₹${price}/night`
+        "🎉 Hotel listing created!\n\n" +
+        "Hotel: " + name + "\n" +
+        "Price: ₹" + price + "/night"
     );
 }
 
 function triggerSocialAction(actionType) {
-    alert(`🌍 Social action registered: ${actionType}`);
+    alert("🌍 Social action: " + actionType);
 }
 
 function logout() {
