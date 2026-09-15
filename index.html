@@ -16,12 +16,13 @@
 
 <main>
 
+  <!-- CUSTOMER RIDE -->
   <section class="card">
     <h2>🚕 Book a Ride</h2>
 
-    <input type="text" id="pickup" placeholder="Pickup location">
+    <input type="text" id="pickup" placeholder="Pickup Location">
 
-    <input type="text" id="drop" placeholder="Drop location">
+    <input type="text" id="drop" placeholder="Drop Location">
 
     <input type="date" id="date">
 
@@ -35,121 +36,119 @@
       <option>Tempo Traveller</option>
     </select>
 
-    <button onclick="bookRide()">Book Ride</button>
+    <button onclick="bookRide()">🚕 Book Ride</button>
 
     <p id="rideMessage"></p>
   </section>
 
 
-  
-<section class="card">
-  <h2>🏨 Hotel Booking</h2>
+  <!-- HOTEL -->
+  <section class="card">
+    <h2>🏨 Hotel Booking</h2>
 
-  <p>क्या आपको hotel book करनी है?</p>
+    <p>क्या आपको hotel book करनी है?</p>
 
-  <input type="text" id="hotelCity" placeholder="Enter city">
-
-  <input type="date" id="checkin">
-
-  <input type="date" id="checkout">
-
-  <button onclick="bookHotel()">🏨 Book Hotel</button>
-
-  <button onclick="skipHotel()" style="margin-top:10px;">
-    ⏭️ Skip Hotel Booking
-  </button>
-
-  <p id="hotelMessage"></p>
-</section>
-    <input type="text" id="hotelCity" placeholder="Enter city">
+    <input type="text" id="hotelCity" placeholder="Enter City">
 
     <input type="date" id="checkin">
 
     <input type="date" id="checkout">
 
-    <button onclick="bookHotel()">Search Hotels</button>
+    <button onclick="bookHotel()">🏨 Book Hotel</button>
+
+    <button onclick="skipHotel()" style="margin-top:10px;">
+      ⏭️ Skip Hotel Booking
+    </button>
 
     <p id="hotelMessage"></p>
   </section>
 
 
+  <!-- CUSTOMER ACCOUNT -->
   <section class="card">
-  <h2>👤 Customer Account</h2>
+    <h2>👤 Customer Account</h2>
 
-  <input type="text" id="userName" placeholder="Your Name">
+    <input type="text" id="userName" placeholder="Your Name">
 
-  <input type="tel" id="userMobile" placeholder="Mobile Number">
+    <input type="tel" id="userMobile" placeholder="Mobile Number">
 
-  <input type="password" id="userPassword" placeholder="Password">
+    <input type="password" id="userPassword" placeholder="Password">
 
-  <button onclick="registerUser()">🆕 Create Account</button>
+    <button onclick="registerUser()">🆕 Create Account</button>
 
-  <button onclick="loginUser()" style="margin-top:10px;">
-    🔐 Login
-  </button>
+    <button onclick="loginUser()" style="margin-top:10px;">
+      🔐 Login
+    </button>
 
-  <button onclick="logoutUser()" style="margin-top:10px;">
-    🚪 Logout
-  </button>
+    <button onclick="logoutUser()" style="margin-top:10px;">
+      🚪 Logout
+    </button>
 
-  <p id="accountMessage"></p>
-</section>
-
-    <button onclick="login()">Login / Register</button>
-
-    <p id="loginMessage"></p>
+    <p id="accountMessage"></p>
   </section>
 
 
+  <!-- DRIVER -->
   <section class="card">
-  <h2>🚗 Driver Account</h2>
+    <h2>🚗 Driver Account</h2>
 
-  <input type="text" id="driverName" placeholder="Driver Name">
+    <input type="text" id="driverName" placeholder="Driver Name">
 
-  <input type="tel" id="driverMobile" placeholder="Mobile Number">
+    <input type="tel" id="driverMobile" placeholder="Mobile Number">
 
-  <input type="password" id="driverPassword" placeholder="Password">
+    <input type="password" id="driverPassword" placeholder="Password">
 
-  <select id="driverVehicle">
-    <option value="">Select Vehicle</option>
-    <option>Car</option>
-    <option>SUV</option>
-    <option>Taxi</option>
-  </select>
+    <select id="driverVehicle">
+      <option value="">Select Vehicle</option>
+      <option>Car</option>
+      <option>SUV</option>
+      <option>Taxi</option>
+      <option>Tempo Traveller</option>
+    </select>
 
-  <input type="text" id="vehicleNumber" placeholder="Vehicle Number">
+    <input type="text" id="vehicleNumber" placeholder="Vehicle Number">
 
-  <button onclick="registerDriver()">🆕 Driver Registration</button>
+    <button onclick="registerDriver()">🆕 Driver Registration</button>
 
-  <button onclick="loginDriver()" style="margin-top:10px;">
-    🔐 Driver Login
-  </button>
+    <button onclick="loginDriver()" style="margin-top:10px;">
+      🔐 Driver Login
+    </button>
 
-  <button onclick="logoutDriver()" style="margin-top:10px;">
-    🚪 Driver Logout
-  </button>
-
-  <p id="driverMessage"></p>
-  </section>
-    <p>Driver बनकर rides प्राप्त करें।</p>
-
-    <button onclick="driverLogin()">Driver Login</button>
+    <button onclick="logoutDriver()" style="margin-top:10px;">
+      🚪 Driver Logout
+    </button>
 
     <p id="driverMessage"></p>
   </section>
 
 
+  <!-- DRIVER RIDE REQUESTS -->
+  <section class="card">
+    <h2>📋 Available Ride Requests</h2>
+
+    <div id="rideRequests">
+      <p>अभी कोई ride request नहीं है।</p>
+    </div>
+
+    <button onclick="refreshRides()" style="margin-top:10px;">
+      🔄 Refresh Rides
+    </button>
+  </section>
+
+
+  <!-- SOCIAL -->
   <section class="card">
     <h2>📱 NV Travels Social</h2>
 
     <p>Travel posts और videos share करें।</p>
 
-    <button onclick="social()">Open Social</button>
+    <button onclick="social()">📱 Open Social</button>
 
     <p id="socialMessage"></p>
   </section>
 
 </main>
+
 
 <footer>
   <p>© 2026 NV Travels</p>
