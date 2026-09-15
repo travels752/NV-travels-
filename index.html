@@ -74,7 +74,26 @@
 
 
   <section class="card">
-    <h2>👤 Account</h2>
+  <h2>👤 Customer Account</h2>
+
+  <input type="text" id="userName" placeholder="Your Name">
+
+  <input type="tel" id="userMobile" placeholder="Mobile Number">
+
+  <input type="password" id="userPassword" placeholder="Password">
+
+  <button onclick="registerUser()">🆕 Create Account</button>
+
+  <button onclick="loginUser()" style="margin-top:10px;">
+    🔐 Login
+  </button>
+
+  <button onclick="logoutUser()" style="margin-top:10px;">
+    🚪 Logout
+  </button>
+
+  <p id="accountMessage"></p>
+</section>
 
     <button onclick="login()">Login / Register</button>
 
