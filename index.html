@@ -102,8 +102,35 @@
 
 
   <section class="card">
-    <h2>🚗 Driver</h2>
+  <h2>🚗 Driver Account</h2>
 
+  <input type="text" id="driverName" placeholder="Driver Name">
+
+  <input type="tel" id="driverMobile" placeholder="Mobile Number">
+
+  <input type="password" id="driverPassword" placeholder="Password">
+
+  <select id="driverVehicle">
+    <option value="">Select Vehicle</option>
+    <option>Car</option>
+    <option>SUV</option>
+    <option>Taxi</option>
+  </select>
+
+  <input type="text" id="vehicleNumber" placeholder="Vehicle Number">
+
+  <button onclick="registerDriver()">🆕 Driver Registration</button>
+
+  <button onclick="loginDriver()" style="margin-top:10px;">
+    🔐 Driver Login
+  </button>
+
+  <button onclick="logoutDriver()" style="margin-top:10px;">
+    🚪 Driver Logout
+  </button>
+
+  <p id="driverMessage"></p>
+  </section>
     <p>Driver बनकर rides प्राप्त करें।</p>
 
     <button onclick="driverLogin()">Driver Login</button>
