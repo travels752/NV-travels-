@@ -1,114 +1,81 @@
+// ===============================
+// CUSTOMER ACCOUNT
+// ===============================
+
 function registerUser() {
   const name = document.getElementById("userName").value.trim();
   const mobile = document.getElementById("userMobile").value.trim();
   const password = document.getElementById("userPassword").value;
 
   if (!name || !mobile || !password) {
-    document.getElementById("accountMessage").textContent =
-      "कृपया Name, Mobile और Password भरें।";
+    show("accountMessage", "कृपया सभी details भरें।");
     return;
   }
 
-  if (mobile.length !== 10) {
-    document.getElementById("accountMessage").textContent =
-      "कृपया 10 अंकों का Mobile Number डालें।";
+  if (!/^\d{10}$/.test(mobile)) {
+    show("accountMessage", "कृपया 10 अंकों का Mobile Number डालें।");
     return;
   }
 
-  localStorage.setItem(
-    "nvUser",
-    JSON.stringify({
-      name: name,
-      mobile: mobile,
-      password: password
-    })
-  );
+  localStorage.setItem("nvUser", JSON.stringify({
+    name,
+    mobile,
+    password
+  }));
 
-  document.getElementById("accountMessage").textContent =
-    "✅ Account बन गया! अब Login करें।";
+  show("accountMessage", "✅ Account successfully बनाया गया।");
 }
 
 function loginUser() {
   const mobile = document.getElementById("userMobile").value.trim();
   const password = document.getElementById("userPassword").value;
 
-  const savedUser = localStorage.getItem("nvUser");
+  const saved = localStorage.getItem("nvUser");
 
-  if (!savedUser) {
-    document.getElementById("accountMessage").textContent =
-      "❌ पहले Create Account करें।";
+  if (!saved) {
+    show("accountMessage", "❌ पहले Create Account करें।");
     return;
   }
 
-  const user = JSON.parse(savedUser);
+  const user = JSON.parse(saved);
 
   if (mobile === user.mobile && password === user.password) {
     localStorage.setItem("nvLoggedIn", "true");
 
-    document.getElementById("accountMessage").textContent =
-      "✅ Login successful! Welcome " + user.name;
+    show(
+      "accountMessage",
+      "✅ Login successful! Welcome " + user.name
+    );
   } else {
-    document.getElementById("accountMessage").textContent =
-      "❌ Mobile Number या Password गलत है।";
+    show("accountMessage", "❌ Mobile Number या Password गलत है।");
   }
 }
 
 function logoutUser() {
   localStorage.removeItem("nvLoggedIn");
-
-  document.getElementById("accountMessage").textContent =
-    "🚪 आप Logout हो गए हैं।";
+  show("accountMessage", "🚪 Customer Logout successful।");
 }
 
-function bookRide() {
-  const pickup = document.getElementById("pickup").value.trim();
-  const drop = document.getElementById("drop").value.trim();
-  const vehicle = document.getElementById("vehicle").value;
 
-  if (!pickup || !drop || !vehicle) {
-    document.getElementById("rideMessage").textContent =
-      "कृपया Pickup, Drop और Vehicle चुनें।";
-    return;
-  }
-
-  document.getElementById("rideMessage").textContent =
-    "✅ Ride request तैयार है!";
-}
-
-function bookHotel() {
-  const city = document.getElementById("hotelCity").value.trim();
-
-  if (!city) {
-    document.getElementById("hotelMessage").textContent =
-      "कृपया City डालें।";
-    return;
-  }
-
-  document.getElementById("hotelMessage").textContent =
-    "🏨 Hotel search request तैयार है!";
-}
-
-function skipHotel() {
-  document.getElementById("hotelMessage").textContent =
-    "⏭️ Hotel booking skipped.";
-}
+// ===============================
+// DRIVER ACCOUNT
+// ===============================
 
 function registerDriver() {
   const name = document.getElementById("driverName").value.trim();
   const mobile = document.getElementById("driverMobile").value.trim();
   const password = document.getElementById("driverPassword").value;
   const vehicle = document.getElementById("driverVehicle").value;
-  const vehicleNumber = document.getElementById("vehicleNumber").value.trim();
+  const vehicleNumber =
+    document.getElementById("vehicleNumber").value.trim();
 
   if (!name || !mobile || !password || !vehicle || !vehicleNumber) {
-    document.getElementById("driverMessage").textContent =
-      "कृपया सभी Driver details भरें।";
+    show("driverMessage", "कृपया सभी Driver details भरें।");
     return;
   }
 
-  if (mobile.length !== 10) {
-    document.getElementById("driverMessage").textContent =
-      "कृपया 10 अंकों का Mobile Number डालें।";
+  if (!/^\d{10}$/.test(mobile)) {
+    show("driverMessage", "कृपया 10 अंकों का Mobile Number डालें।");
     return;
   }
 
@@ -120,43 +87,250 @@ function registerDriver() {
     vehicleNumber
   }));
 
-  document.getElementById("driverMessage").textContent =
-    "✅ Driver registration successful! अब Login करें।";
+  show(
+    "driverMessage",
+    "✅ Driver registration successful। अब Login करें।"
+  );
 }
 
 function loginDriver() {
   const mobile = document.getElementById("driverMobile").value.trim();
   const password = document.getElementById("driverPassword").value;
 
-  const savedDriver = localStorage.getItem("nvDriver");
+  const saved = localStorage.getItem("nvDriver");
 
-  if (!savedDriver) {
-    document.getElementById("driverMessage").textContent =
-      "❌ पहले Driver Registration करें।";
+  if (!saved) {
+    show("driverMessage", "❌ पहले Driver Registration करें।");
     return;
   }
 
-  const driver = JSON.parse(savedDriver);
+  const driver = JSON.parse(saved);
 
   if (mobile === driver.mobile && password === driver.password) {
     localStorage.setItem("nvDriverLoggedIn", "true");
 
-    document.getElementById("driverMessage").textContent =
-      "✅ Driver Login successful! Welcome " + driver.name;
+    show(
+      "driverMessage",
+      "✅ Driver Login successful! Welcome " + driver.name
+    );
+
+    refreshRides();
   } else {
-    document.getElementById("driverMessage").textContent =
-      "❌ Mobile Number या Password गलत है।";
+    show("driverMessage", "❌ Mobile Number या Password गलत है।");
   }
 }
 
 function logoutDriver() {
   localStorage.removeItem("nvDriverLoggedIn");
-
-  document.getElementById("driverMessage").textContent =
-    "🚪 Driver Logout successful.";
+  show("driverMessage", "🚪 Driver Logout successful।");
 }
+
+
+// ===============================
+// RIDE BOOKING
+// ===============================
+
+function bookRide() {
+  const pickup = document.getElementById("pickup").value.trim();
+  const drop = document.getElementById("drop").value.trim();
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const vehicle = document.getElementById("vehicle").value;
+
+  if (!pickup || !drop || !date || !time || !vehicle) {
+    show(
+      "rideMessage",
+      "कृपया Pickup, Drop, Date, Time और Vehicle भरें।"
+    );
+    return;
+  }
+
+  const ride = {
+    id: Date.now(),
+    pickup,
+    drop,
+    date,
+    time,
+    vehicle,
+    status: "Available"
+  };
+
+  const rides = JSON.parse(
+    localStorage.getItem("nvRides") || "[]"
+  );
+
+  rides.push(ride);
+
+  localStorage.setItem("nvRides", JSON.stringify(rides));
+
+  show(
+    "rideMessage",
+    "✅ Ride request successfully बनाई गई!"
+  );
+
+  refreshRides();
+}
+
+
+// ===============================
+// DRIVER RIDE REQUESTS
+// ===============================
+
+function refreshRides() {
+  const box = document.getElementById("rideRequests");
+
+  if (!box) return;
+
+  const rides = JSON.parse(
+    localStorage.getItem("nvRides") || "[]"
+  );
+
+  if (rides.length === 0) {
+    box.innerHTML = "<p>अभी कोई ride request नहीं है।</p>";
+    return;
+  }
+
+  box.innerHTML = "";
+
+  rides.forEach(function(ride) {
+
+    const div = document.createElement("div");
+
+    div.className = "card";
+
+    div.innerHTML = `
+      <h3>🚕 Ride #${ride.id}</h3>
+      <p><strong>Pickup:</strong> ${ride.pickup}</p>
+      <p><strong>Drop:</strong> ${ride.drop}</p>
+      <p><strong>Date:</strong> ${ride.date}</p>
+      <p><strong>Time:</strong> ${ride.time}</p>
+      <p><strong>Vehicle:</strong> ${ride.vehicle}</p>
+      <p><strong>Status:</strong> ${ride.status}</p>
+
+      ${
+        ride.status === "Available"
+          ? `<button onclick="acceptRide(${ride.id})">
+               ✅ Accept Ride
+             </button>`
+          : ""
+      }
+    `;
+
+    box.appendChild(div);
+  });
+}
+
+
+// ===============================
+// ACCEPT RIDE
+// ===============================
+
+function acceptRide(id) {
+  const loggedIn =
+    localStorage.getItem("nvDriverLoggedIn");
+
+  if (loggedIn !== "true") {
+    show(
+      "driverMessage",
+      "🔐 पहले Driver Login करें।"
+    );
+    return;
+  }
+
+  const rides = JSON.parse(
+    localStorage.getItem("nvRides") || "[]"
+  );
+
+  const ride = rides.find(function(item) {
+    return item.id === id;
+  });
+
+  if (!ride) {
+    show("driverMessage", "❌ Ride नहीं मिली।");
+    return;
+  }
+
+  ride.status = "Accepted";
+
+  localStorage.setItem(
+    "nvRides",
+    JSON.stringify(rides)
+  );
+
+  show(
+    "driverMessage",
+    "✅ Ride successfully accepted!"
+  );
+
+  refreshRides();
+}
+
+
+// ===============================
+// HOTEL
+// ===============================
+
+function bookHotel() {
+  const city =
+    document.getElementById("hotelCity").value.trim();
+
+  const checkin =
+    document.getElementById("checkin").value;
+
+  const checkout =
+    document.getElementById("checkout").value;
+
+  if (!city || !checkin || !checkout) {
+    show(
+      "hotelMessage",
+      "कृपया City, Check-in और Check-out भरें।"
+    );
+    return;
+  }
+
+  show(
+    "hotelMessage",
+    "🏨 Hotel booking request तैयार है!"
+  );
+}
+
+function skipHotel() {
+  show(
+    "hotelMessage",
+    "⏭️ Hotel booking skipped।"
+  );
+}
+
+
+// ===============================
+// SOCIAL
+// ===============================
 
 function social() {
-  document.getElementById("socialMessage").textContent =
-    "📱 Social section जल्द जोड़ा जाएगा।";
+  show(
+    "socialMessage",
+    "📱 Social section जल्द उपलब्ध होगा।"
+  );
 }
+
+
+// ===============================
+// HELPER
+// ===============================
+
+function show(id, message) {
+  const element = document.getElementById(id);
+
+  if (element) {
+    element.textContent = message;
+  }
+}
+
+
+// ===============================
+// LOAD RIDES
+// ===============================
+
+document.addEventListener("DOMContentLoaded", function() {
+  refreshRides();
+});
