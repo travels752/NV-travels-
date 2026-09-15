@@ -9,53 +9,91 @@
 
 <body>
 
-  <header>
-    <h1>NV Travels</h1>
-    <p>Travel • Taxi • Hotel Booking</p>
-  </header>
+<header>
+  <h1>🚕 NV Travels</h1>
+  <p>Taxi • Driver • Hotel • Travel</p>
+</header>
 
-  <main>
+<main>
 
+  <section class="card">
     <h2>🚕 Book a Ride</h2>
 
-    <input type="text" id="pickup" placeholder="Pickup Location">
+    <input type="text" id="pickup" placeholder="Pickup location">
 
-    <input type="text" id="drop" placeholder="Drop Location">
+    <input type="text" id="drop" placeholder="Drop location">
 
     <input type="date" id="date">
 
     <input type="time" id="time">
 
-    <button onclick="bookRide()">🚕 Book Ride</button>
+    <select id="vehicle">
+      <option value="">Select Vehicle</option>
+      <option>Car</option>
+      <option>SUV</option>
+      <option>Taxi</option>
+      <option>Tempo Traveller</option>
+    </select>
 
-    <p id="bookingMessage"></p>
+    <button onclick="bookRide()">Book Ride</button>
 
-    <hr>
+    <p id="rideMessage"></p>
+  </section>
 
-    <button>🏨 Hotel Booking</button>
-    <<section id="customerLogin">
-  <h2>👤 Customer Login</h2>
 
-  <input type="text" id="customerName" placeholder="Your Name">
+  <section class="card">
+    <h2>🏨 Hotel Booking</h2>
 
-  <input type="tel" id="customerPhone" placeholder="Mobile Number">
+    <input type="text" id="hotelCity" placeholder="Enter city">
 
-  <input type="password" id="customerPassword" placeholder="Password">
+    <input type="date" id="checkin">
 
-  <button onclick="customerLogin()">Login</button>
+    <input type="date" id="checkout">
 
-  <p id="loginMessage"></p>
-    </section>
-    <button>👨‍✈️ Driver Login</button>
-    <button>📞 Contact NV Travels</button>
+    <button onclick="bookHotel()">Search Hotels</button>
 
-  </main>
+    <p id="hotelMessage"></p>
+  </section>
 
-  <footer>
-    <p>© 2026 NV Travels</p>
-  </footer>
 
-  <script src="script.js"></script>
+  <section class="card">
+    <h2>👤 Account</h2>
+
+    <button onclick="login()">Login / Register</button>
+
+    <p id="loginMessage"></p>
+  </section>
+
+
+  <section class="card">
+    <h2>🚗 Driver</h2>
+
+    <p>Driver बनकर rides प्राप्त करें।</p>
+
+    <button onclick="driverLogin()">Driver Login</button>
+
+    <p id="driverMessage"></p>
+  </section>
+
+
+  <section class="card">
+    <h2>📱 NV Travels Social</h2>
+
+    <p>Travel posts और videos share करें।</p>
+
+    <button onclick="social()">Open Social</button>
+
+    <p id="socialMessage"></p>
+  </section>
+
+</main>
+
+<footer>
+  <p>© 2026 NV Travels</p>
+  <p>📞 9098533390</p>
+</footer>
+
+<script src="script.js"></script>
 
 </body>
 </html>
