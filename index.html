@@ -696,10 +696,250 @@ window.verifyOTP = async function () {
     } catch (error) {
 
         console.error(
-            "Firebase Verify Error:",
+            <script type="module">
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+import {
+    getAuth,
+    RecaptchaVerifier,
+    signInWithPhoneNumber
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDZ9xZTV5HmF1PjmYvr4jQ1_cOw7pADWf8",
+    authDomain: "nv-travels.firebaseapp.com",
+    projectId: "nv-travels",
+    storageBucket: "nv-travels.firebasestorage.app",
+    messagingSenderId: "1030027773089",
+    appId: "1:1030027773089:web:42bd462370fe04bae25ce0",
+    measurementId: "G-694BTN9C1T"
+};
+
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+let confirmationResult = null;
+let recaptchaVerifier = null;
+
+
+/* ================================
+   SEND OTP
+================================ */
+
+window.sendOTP = async function () {
+
+    const phoneInput =
+        document.getElementById("auth-phone");
+
+    let phone =
+        phoneInput.value.trim();
+
+    if (!phone) {
+        alert("📱 Phone number enter karo.\n\nExample: +919876543210");
+        return;
+    }
+
+    /* 10 digit Indian number */
+    if (/^[6-9]\d{9}$/.test(phone)) {
+        phone = "+91" + phone;
+        phoneInput.value = phone;
+    }
+
+    /* E.164 format check */
+    if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+        alert(
+            "❌ Phone number galat hai.\n\nExample:\n+919876543210"
+        );
+        return;
+    }
+
+    const button =
+        document.getElementById("send-otp-btn");
+
+    button.disabled = true;
+    button.innerText = "⏳ Sending OTP...";
+
+    try {
+
+        /*
+         * Invisible reCAPTCHA
+         * Send OTP button itself is the verifier element.
+         */
+
+        if (!recaptchaVerifier) {
+
+            recaptchaVerifier =
+                new RecaptchaVerifier(
+                    auth,
+                    "send-otp-btn",
+                    {
+                        size: "invisible",
+
+                        callback: () => {
+                            console.log(
+                                "✅ reCAPTCHA verified"
+                            );
+                        },
+
+                        "expired-callback": () => {
+                            console.log(
+                                "⚠️ reCAPTCHA expired"
+                            );
+                        }
+                    }
+                );
+
+            await recaptchaVerifier.render();
+        }
+
+
+        confirmationResult =
+            await signInWithPhoneNumber(
+                auth,
+                phone,
+                recaptchaVerifier
+            );
+
+
+        document.getElementById(
+            "otp-section"
+        ).style.display = "block";
+
+
+        alert(
+            "✅ OTP tumhare phone par bhej diya gaya."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Firebase OTP Error:",
             error
         );
 
+        /*
+         * reCAPTCHA ko reset karo
+         */
+
+        if (recaptchaVerifier) {
+
+            try {
+                recaptchaVerifier.clear();
+            } catch (e) {
+                console.log(e);
+            }
+
+            recaptchaVerifier = null;
+        }
+
+
+        let message =
+            error?.message ||
+            "Unknown Firebase error";
+
+
+        alert(
+            "❌ OTP send nahi hua.\n\n" +
+            "Firebase: " +
+            message
+        );
+
+
+    } finally {
+
+        button.disabled = false;
+        button.innerText = "📲 Send OTP";
+
+    }
+
+};
+
+
+/* ================================
+   VERIFY OTP
+================================ */
+
+window.verifyOTP = async function () {
+
+    const code =
+        document.getElementById("auth-otp")
+        .value
+        .trim();
+
+
+    if (!confirmationResult) {
+
+        alert(
+            "⚠️ Pehle Send OTP dabao."
+        );
+
+        return;
+    }
+
+
+    if (!/^\d{6}$/.test(code)) {
+
+        alert(
+            "🔐 6 digit OTP enter karo."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await confirmationResult.confirm(code);
+
+
+        appState.isLoggedIn = true;
+
+        appState.userName =
+            result.user.phoneNumber ||
+            "Traveler";
+
+
+        document.getElementById(
+            "screen-login"
+        ).classList.remove("active-screen");
+
+
+        document.getElementById(
+            "global-nav"
+        ).style.display = "flex";
+
+
+        if (appState.role === "customer") {
+            switchTab("home");
+        }
+
+        if (appState.role === "driver") {
+            switchTab("driver-panel");
+        }
+
+        if (appState.role === "owner") {
+            switchTab("owner-panel");
+        }
+
+
+        alert(
+            "✅ Login Successfully!\n\nWelcome to NV Travels."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Firebase Verify Error:",
+            error
+        );
 
         alert(
             "❌ OTP galat hai ya expire ho gaya.\n\n" +
@@ -711,8 +951,6 @@ window.verifyOTP = async function () {
 };
 
 </script>
-
-
 <script src="script.js"></script>
 
 </body>
