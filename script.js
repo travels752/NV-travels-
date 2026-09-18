@@ -1,308 +1,229 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+// ===============================
+// NV TRAVELSS - APP FUNCTIONALITY
+// ===============================
 
-body {
-    font-family: Arial, sans-serif;
-    background: #f5f7fb;
-    color: #17213a;
-    padding-bottom: 95px;
-}
+function openScreen(screenId) {
 
-.app-header {
-    height: 70px;
-    background: #090d14;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-}
+    // Sabhi screens hide karo
+    const screens = document.querySelectorAll(".screen");
 
-.logo {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 1px;
-}
+    screens.forEach(function(screen) {
+        screen.classList.remove("active");
+    });
 
-.online-dot {
-    width: 12px;
-    height: 12px;
-    background: #19d66b;
-    border-radius: 50%;
-}
+    // Selected screen show karo
+    const selectedScreen = document.getElementById(screenId);
 
-.screen {
-    display: none;
-    padding: 20px 16px;
-    min-height: calc(100vh - 70px);
-}
-
-.screen.active {
-    display: block;
-}
-
-.welcome-card {
-    background: linear-gradient(135deg, #0869e8, #11b5e9);
-    color: white;
-    padding: 25px 20px;
-    border-radius: 22px;
-    margin-bottom: 25px;
-    box-shadow: 0 8px 25px rgba(0, 100, 220, .2);
-}
-
-.welcome-card h1 {
-    font-size: 24px;
-    margin-bottom: 8px;
-}
-
-.welcome-card p {
-    font-size: 14px;
-}
-
-.section-title {
-    font-size: 20px;
-    margin-bottom: 15px;
-}
-
-.home-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-}
-
-.home-grid button {
-    background: white;
-    border: none;
-    border-radius: 20px;
-    padding: 22px 10px;
-    box-shadow: 0 5px 18px rgba(0,0,0,.08);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-}
-
-.home-grid span {
-    font-size: 38px;
-}
-
-.home-grid b {
-    font-size: 18px;
-}
-
-.home-grid small {
-    color: #777;
-}
-
-h1 {
-    margin: 20px 0;
-}
-
-.form-card {
-    background: white;
-    padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 5px 18px rgba(0,0,0,.08);
-}
-
-.form-card label {
-    display: block;
-    margin: 15px 0 7px;
-    font-weight: bold;
-}
-
-.form-card input,
-.form-card select,
-.search-box input {
-    width: 100%;
-    padding: 14px;
-    border: 1px solid #d7dce5;
-    border-radius: 12px;
-    font-size: 15px;
-}
-
-.main-button {
-    width: 100%;
-    margin-top: 20px;
-    padding: 15px;
-    border: none;
-    border-radius: 13px;
-    background: #0878e8;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.back-button {
-    border: none;
-    background: white;
-    padding: 10px 15px;
-    border-radius: 10px;
-    color: #0878e8;
-    font-weight: bold;
-}
-
-.video-card {
-    background: white;
-    margin-bottom: 18px;
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 5px 18px rgba(0,0,0,.08);
-}
-
-.video-placeholder {
-    height: 180px;
-    background: #101722;
-    color: #1685ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 60px;
-}
-
-.video-card h3,
-.video-card p {
-    padding: 12px 15px 0;
-}
-
-.video-card p {
-    padding-bottom: 15px;
-    color: #666;
-}
-
-.search-box {
-    background: white;
-    padding: 18px;
-    border-radius: 18px;
-}
-
-.search-box button {
-    width: 100%;
-    margin-top: 10px;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    background: #0878e8;
-    color: white;
-    font-weight: bold;
-}
-
-.profile-top {
-    text-align: center;
-    background: white;
-    padding: 25px;
-    border-radius: 20px;
-}
-
-.profile-avatar {
-    font-size: 65px;
-}
-
-.profile-top p {
-    color: #777;
-}
-
-.profile-menu {
-    margin-top: 18px;
-}
-
-.profile-menu button {
-    width: 100%;
-    padding: 16px;
-    margin-bottom: 10px;
-    border: none;
-    border-radius: 13px;
-    background: white;
-    text-align: left;
-    font-size: 16px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.06);
-}
-
-
-/* BOTTOM NAVIGATION */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 82px;
-    background: #090d14;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 9999;
-    border-top: 1px solid #202733;
-    padding-bottom: 5px;
-}
-
-.nav-item {
-    position: relative;
-    width: 20%;
-    height: 70px;
-    border: none;
-    background: transparent;
-    color: #737b89;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-}
-
-.nav-item span {
-    font-size: 34px;
-    line-height: 30px;
-}
-
-.nav-item small {
-    font-size: 10px;
-}
-
-.active-nav {
-    color: #0878e8;
-}
-
-.ride-nav span {
-    font-size: 27px;
-}
-
-.badge {
-    position: absolute;
-    top: 5px;
-    right: 12px;
-    background: #ff3045;
-    color: white;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    border: 2px solid #090d14;
-}
-
-.online-indicator {
-    position: absolute;
-    right: 12px;
-    top: 13px;
-    width: 9px;
-    height: 9px;
-    background: #ff3045;
-    border-radius: 50%;
-    border: 1px solid #090d14;
-}
-
-@media (max-width: 380px) {
-
-    .nav-item span {
-        font-size: 29px;
+    if (selectedScreen) {
+        selectedScreen.classList.add("active");
     }
 
-    .nav-item small {
-        font-size: 9px;
-    }
+    // Bottom navigation active state
+    const navItems = document.querySelectorAll(".nav-item");
+
+    navItems.forEach(function(item) {
+        item.classList.remove("active-nav");
+    });
+
+    navItems.forEach(function(item) {
+
+        const clickCode = item.getAttribute("onclick");
+
+        if (clickCode && clickCode.includes("'" + screenId + "'")) {
+            item.classList.add("active-nav");
+        }
+
+    });
+
+    // Page ko top par le jao
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 }
+
+
+// ===============================
+// RIDE BOOKING
+// ===============================
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    const buttons = document.querySelectorAll(".main-button");
+
+    buttons.forEach(function(button) {
+
+        button.addEventListener("click", function() {
+
+            const parent = button.closest(".form-card");
+
+            if (!parent) return;
+
+            // Ride
+            if (parent.closest("#ride")) {
+
+                const inputs = parent.querySelectorAll("input");
+                const vehicle = parent.querySelector("select");
+
+                const pickup = inputs[0].value.trim();
+                const destination = inputs[1].value.trim();
+
+                if (!pickup || !destination || vehicle.value === "Select Vehicle") {
+                    alert("Please enter pickup, destination and select vehicle.");
+                    return;
+                }
+
+                alert(
+                    "🚕 Ride Request Sent!\n\n" +
+                    "Pickup: " + pickup + "\n" +
+                    "Destination: " + destination + "\n" +
+                    "Vehicle: " + vehicle.value + "\n\n" +
+                    "Nearby drivers will receive your request."
+                );
+
+                return;
+            }
+
+
+            // Hotel
+            if (parent.closest("#hotel")) {
+
+                const inputs = parent.querySelectorAll("input");
+                const destination = inputs[0].value.trim();
+                const checkIn = inputs[1].value;
+                const checkOut = inputs[2].value;
+
+                if (!destination || !checkIn || !checkOut) {
+                    alert("Please enter destination, check-in and check-out dates.");
+                    return;
+                }
+
+                alert(
+                    "🏨 Hotel Search Started!\n\n" +
+                    "Destination: " + destination + "\n" +
+                    "Check-in: " + checkIn + "\n" +
+                    "Check-out: " + checkOut + "\n\n" +
+                    "Searching available hotels..."
+                );
+
+                return;
+            }
+
+
+            // Packages
+            if (parent.closest("#packages")) {
+
+                const inputs = parent.querySelectorAll("input");
+                const selects = parent.querySelectorAll("select");
+
+                const from = inputs[0].value.trim();
+                const destination = inputs[1].value.trim();
+                const days = selects[0].value;
+                const passengers = inputs[2].value.trim();
+
+                if (!from || !destination || !passengers) {
+                    alert("Please fill all package details.");
+                    return;
+                }
+
+                alert(
+                    "🎒 Package Search Started!\n\n" +
+                    "From: " + from + "\n" +
+                    "Destination: " + destination + "\n" +
+                    "Duration: " + days + "\n" +
+                    "Passengers: " + passengers + "\n\n" +
+                    "Finding travel packages..."
+                );
+
+                return;
+            }
+
+        });
+
+    });
+
+
+    // ===============================
+    // SEARCH
+    // ===============================
+
+    const searchButton = document.querySelector("#search .search-box button");
+
+    if (searchButton) {
+
+        searchButton.addEventListener("click", function() {
+
+            const searchInput =
+                document.querySelector("#search .search-box input");
+
+            const query = searchInput.value.trim();
+
+            if (!query) {
+                alert("Please type something to search.");
+                return;
+            }
+
+            alert(
+                "🔍 Searching NV Travels for:\n\n" +
+                query
+            );
+
+        });
+
+    }
+
+
+    // ===============================
+    // PROFILE BUTTONS
+    // ===============================
+
+    const profileButtons =
+        document.querySelectorAll("#profile .profile-menu button");
+
+    profileButtons.forEach(function(button) {
+
+        button.addEventListener("click", function() {
+
+            alert(
+                button.innerText +
+                "\n\nThis section is ready for the next development step."
+            );
+
+        });
+
+    });
+
+
+    // ===============================
+    // SOCIAL VIDEO ACTION
+    // ===============================
+
+    const videoCards =
+        document.querySelectorAll(".video-card");
+
+    videoCards.forEach(function(card) {
+
+        card.addEventListener("click", function() {
+
+            alert(
+                "▶️ NV Travels Video\n\n" +
+                "Like ❤️  Comment 💬  Share 🔗"
+            );
+
+        });
+
+    });
+
+});
+
+
+// ===============================
+// START APP
+// ===============================
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    // Home ko default screen rakho
+    openScreen("home");
+
+});
