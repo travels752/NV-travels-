@@ -1,426 +1,308 @@
-let appState = {
-    role: 'customer',
-    isLoggedIn: false,
-    userName: 'Traveler',
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
-    // Driver commission
-    driverCommissionRate: 0.15,
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fb;
+    color: #17213a;
+    padding-bottom: 95px;
+}
 
-    driverEarnings: 0,
-    driverRides: 0,
+.app-header {
+    height: 70px;
+    background: #090d14;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
 
-    // Hotel owner pass
-    hasHotelPass: false,
-    passExpiry: 'Not Active'
-};
+.logo {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
 
+.online-dot {
+    width: 12px;
+    height: 12px;
+    background: #19d66b;
+    border-radius: 50%;
+}
 
-/* =========================
-   ROLE SELECTION
-========================= */
+.screen {
+    display: none;
+    padding: 20px 16px;
+    min-height: calc(100vh - 70px);
+}
 
-function setRole(role, button) {
+.screen.active {
+    display: block;
+}
 
-    appState.role = role;
+.welcome-card {
+    background: linear-gradient(135deg, #0869e8, #11b5e9);
+    color: white;
+    padding: 25px 20px;
+    border-radius: 22px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(0, 100, 220, .2);
+}
 
-    document.querySelectorAll('.role-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+.welcome-card h1 {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
 
-    if (button) {
-        button.classList.add('active');
-    }
+.welcome-card p {
+    font-size: 14px;
+}
 
-    document.getElementById('auth-title').innerText =
-        role.toUpperCase() + " ACCESS PORTAL";
+.section-title {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.home-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.home-grid button {
+    background: white;
+    border: none;
+    border-radius: 20px;
+    padding: 22px 10px;
+    box-shadow: 0 5px 18px rgba(0,0,0,.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+}
+
+.home-grid span {
+    font-size: 38px;
+}
+
+.home-grid b {
+    font-size: 18px;
+}
+
+.home-grid small {
+    color: #777;
+}
+
+h1 {
+    margin: 20px 0;
+}
+
+.form-card {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 5px 18px rgba(0,0,0,.08);
+}
+
+.form-card label {
+    display: block;
+    margin: 15px 0 7px;
+    font-weight: bold;
+}
+
+.form-card input,
+.form-card select,
+.search-box input {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #d7dce5;
+    border-radius: 12px;
+    font-size: 15px;
+}
+
+.main-button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    border: none;
+    border-radius: 13px;
+    background: #0878e8;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.back-button {
+    border: none;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 10px;
+    color: #0878e8;
+    font-weight: bold;
+}
+
+.video-card {
+    background: white;
+    margin-bottom: 18px;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 5px 18px rgba(0,0,0,.08);
+}
+
+.video-placeholder {
+    height: 180px;
+    background: #101722;
+    color: #1685ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+}
+
+.video-card h3,
+.video-card p {
+    padding: 12px 15px 0;
+}
+
+.video-card p {
+    padding-bottom: 15px;
+    color: #666;
+}
+
+.search-box {
+    background: white;
+    padding: 18px;
+    border-radius: 18px;
+}
+
+.search-box button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: #0878e8;
+    color: white;
+    font-weight: bold;
+}
+
+.profile-top {
+    text-align: center;
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+}
+
+.profile-avatar {
+    font-size: 65px;
+}
+
+.profile-top p {
+    color: #777;
+}
+
+.profile-menu {
+    margin-top: 18px;
+}
+
+.profile-menu button {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 13px;
+    background: white;
+    text-align: left;
+    font-size: 16px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.06);
 }
 
 
-/* =========================
-   TAB NAVIGATION
-========================= */
-
-function switchTab(screenId) {
-
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active-screen');
-    });
-
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
-
-    const target =
-        document.getElementById('screen-' + screenId);
-
-    if (target) {
-        target.classList.add('active-screen');
-    }
-
-    const tab =
-        document.getElementById('tab-' + screenId);
-
-    if (tab) {
-        tab.classList.add('active');
-    }
+/* BOTTOM NAVIGATION */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 82px;
+    background: #090d14;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 9999;
+    border-top: 1px solid #202733;
+    padding-bottom: 5px;
 }
 
-
-/* =========================
-   RIDE FARE
-========================= */
-
-function calculateFare() {
-
-    const pickup =
-        document.getElementById('pickup').value.trim();
-
-    const drop =
-        document.getElementById('drop').value.trim();
-
-    if (!pickup || !drop) {
-
-        alert(
-            "📍 Please enter pickup and destination."
-        );
-
-        return;
-    }
-
-    // Demo fare for now
-    const fare =
-        Math.floor(Math.random() * 401) + 200;
-
-    window.lastCalculatedFare = fare;
-
-    document.getElementById('fare-amount').innerText =
-        "₹" + fare.toFixed(2);
-
-    document.getElementById('fare-window').style.display =
-        'flex';
-
-    document.getElementById('request-btn').style.display =
-        'block';
+.nav-item {
+    position: relative;
+    width: 20%;
+    height: 70px;
+    border: none;
+    background: transparent;
+    color: #737b89;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
 }
 
-
-/* =========================
-   DRIVER REQUEST
-========================= */
-
-function sendDriverRequest() {
-
-    if (!window.lastCalculatedFare) {
-
-        alert(
-            "Please calculate the fare first."
-        );
-
-        return;
-    }
-
-    const fare =
-        window.lastCalculatedFare;
-
-    alert(
-        "📡 Ride request sent to nearby drivers.\n\n" +
-        "Customer Fare: ₹" +
-        fare.toFixed(2)
-    );
-
-
-    setTimeout(() => {
-
-        const nvCommission =
-            fare * appState.driverCommissionRate;
-
-        const driverEarning =
-            fare - nvCommission;
-
-
-        appState.driverRides += 1;
-
-        appState.driverEarnings +=
-            driverEarning;
-
-
-        const ridesElement =
-            document.getElementById('drv-rides');
-
-        const earningsElement =
-            document.getElementById('drv-earnings');
-
-
-        if (ridesElement) {
-            ridesElement.innerText =
-                appState.driverRides;
-        }
-
-
-        if (earningsElement) {
-            earningsElement.innerText =
-                "₹" +
-                appState.driverEarnings.toFixed(2);
-        }
-
-
-        alert(
-            "✅ Ride Accepted!\n\n" +
-
-            "Customer Fare: ₹" +
-            fare.toFixed(2) +
-
-            "\n\nNV Travels Commission: ₹" +
-            nvCommission.toFixed(2) +
-
-            "\n\nDriver Earnings: ₹" +
-            driverEarning.toFixed(2)
-        );
-
-    }, 2000);
+.nav-item span {
+    font-size: 34px;
+    line-height: 30px;
 }
 
-
-/* =========================
-   TRAVEL PACKAGES
-========================= */
-
-function searchPackages() {
-
-    const from =
-        document.getElementById('package-from').value.trim();
-
-    const to =
-        document.getElementById('package-to').value.trim();
-
-    const days =
-        document.getElementById('package-days').value;
-
-    const passengers =
-        document.getElementById('package-passengers').value;
-
-    const vehicle =
-        document.getElementById('package-vehicle').value;
-
-    const hotel =
-        document.getElementById('package-hotel').value;
-
-
-    if (
-        !from ||
-        !to ||
-        !days ||
-        !passengers ||
-        !vehicle ||
-        !hotel
-    ) {
-
-        alert(
-            "📦 Package ki sabhi details fill karo."
-        );
-
-        return;
-    }
-
-
-    const results =
-        document.getElementById('package-results');
-
-
-    results.innerHTML = `
-
-        <div class="card" style="margin-top:15px;">
-
-            <h3>📦 Package Found</h3>
-
-            <p style="margin-top:12px;">
-                📍 From: ${from}
-            </p>
-
-            <p style="margin-top:8px;">
-                📍 To: ${to}
-            </p>
-
-            <p style="margin-top:8px;">
-                📅 Days: ${days}
-            </p>
-
-            <p style="margin-top:8px;">
-                👥 Passengers: ${passengers}
-            </p>
-
-            <p style="margin-top:8px;">
-                🚗 Vehicle: ${vehicle}
-            </p>
-
-            <p style="margin-top:8px;">
-                🏨 Hotel: ${hotel}
-            </p>
-
-            <button
-                class="main-btn"
-                style="margin-top:15px;"
-                onclick="alert('📦 Package request sent successfully!')">
-
-                Select Package
-
-            </button>
-
-        </div>
-
-    `;
+.nav-item small {
+    font-size: 10px;
 }
 
-
-/* =========================
-   HOTEL OWNER PASS
-========================= */
-
-function buyOwnerPass() {
-
-    appState.hasHotelPass = true;
-
-    appState.passExpiry =
-        "Active (30 Days)";
-
-
-    const badge =
-        document.getElementById('pass-badge');
-
-
-    if (badge) {
-
-        badge.innerText =
-            appState.passExpiry;
-
-        badge.style.color =
-            '#34c759';
-    }
-
-
-    alert(
-        "💳 ₹1,000 Business Pass activated."
-    );
+.active-nav {
+    color: #0878e8;
 }
 
-
-/* =========================
-   HOTEL LISTING
-========================= */
-
-function handleHotelAdd() {
-
-    if (!appState.hasHotelPass) {
-
-        alert(
-            "⚠️ Please activate the ₹1,000/month Business Pass first."
-        );
-
-        return;
-    }
-
-
-    const name =
-        document.getElementById('h-name').value.trim();
-
-    const price =
-        document.getElementById('h-price').value.trim();
-
-
-    if (!name || !price) {
-
-        alert(
-            "🏨 Please enter hotel name and price."
-        );
-
-        return;
-    }
-
-
-    alert(
-        "🎉 Hotel listing created!\n\n" +
-
-        "Hotel: " +
-        name +
-
-        "\nPrice: ₹" +
-        price +
-        "/night"
-    );
+.ride-nav span {
+    font-size: 27px;
 }
 
-
-/* =========================
-   SOCIAL
-========================= */
-
-function triggerSocialAction(actionType) {
-
-    alert(
-        "🌍 Social action: " +
-        actionType
-    );
+.badge {
+    position: absolute;
+    top: 5px;
+    right: 12px;
+    background: #ff3045;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    border: 2px solid #090d14;
 }
 
+.online-indicator {
+    position: absolute;
+    right: 12px;
+    top: 13px;
+    width: 9px;
+    height: 9px;
+    background: #ff3045;
+    border-radius: 50%;
+    border: 1px solid #090d14;
+}
 
-/* =========================
-   LOGOUT
-========================= */
+@media (max-width: 380px) {
 
-function logout() {
-
-    appState.isLoggedIn = false;
-
-    document.getElementById(
-        'global-nav'
-    ).style.display = 'none';
-
-
-    document.querySelectorAll('.screen')
-        .forEach(screen => {
-            screen.classList.remove(
-                'active-screen'
-            );
-        });
-
-
-    document.getElementById(
-        'screen-login'
-    ).classList.add(
-        'active-screen'
-    );
-
-
-    const phone =
-        document.getElementById('auth-phone');
-
-    const otp =
-        document.getElementById('auth-otp');
-
-    const otpSection =
-        document.getElementById('otp-section');
-
-
-    if (phone) {
-        phone.value = '';
+    .nav-item span {
+        font-size: 29px;
     }
 
-
-    if (otp) {
-        otp.value = '';
-    }
-
-
-    if (otpSection) {
-        otpSection.style.display = 'none';
-    }
-
-
-    // Firebase logout
-    if (
-        typeof window.logoutFirebase ===
-        'function'
-    ) {
-        window.logoutFirebase();
+    .nav-item small {
+        font-size: 9px;
     }
 }
