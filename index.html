@@ -3,142 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NV Travels</title>
+    <title>NV Travelss</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- HEADER -->
-<header class="header">
-    <div>
-        <div class="logo">NV TRAVELSS</div>
-        <div class="tagline">Travel • Ride • Hotel • Packages</div>
-    </div>
-
-    <button class="menu-btn" onclick="openMenu()">☰</button>
+<!-- APP HEADER -->
+<header class="app-header">
+    <div class="logo">NV TRAVELSS</div>
+    <div class="online-dot"></div>
 </header>
 
 
-<!-- MAIN HOME -->
-<main id="home">
+<!-- HOME -->
+<section id="home" class="screen active">
 
-    <section class="welcome">
+    <div class="welcome-card">
         <h1>Welcome to NV Travels 👋</h1>
-        <p>Your complete travel & booking partner</p>
-    </section>
+        <p>Travel • Ride • Hotel • Packages</p>
+    </div>
 
+    <h2 class="section-title">What do you want today?</h2>
 
-    <!-- RIDE -->
-    <section class="service-card ride-card">
-        <div class="service-icon">🚕</div>
+    <div class="home-grid">
 
-        <div class="service-content">
-            <h2>Book a Ride</h2>
-            <p>Taxi • Cab • Local • Outstation</p>
-
-            <button onclick="showSection('ride')">
-                🚕 Book Ride
-            </button>
-        </div>
-    </section>
-
-
-    <!-- HOTEL -->
-    <section class="service-card hotel-card">
-        <div class="service-icon">🏨</div>
-
-        <div class="service-content">
-            <h2>Book Hotel</h2>
-            <p>Find hotels for your trip</p>
-
-            <button onclick="showSection('hotel')">
-                🏨 Book Hotel
-            </button>
-        </div>
-    </section>
-
-
-    <!-- PACKAGES -->
-    <section class="service-card package-card">
-        <div class="service-icon">🎒</div>
-
-        <div class="service-content">
-            <h2>Travel Packages</h2>
-            <p>Choose destination & number of days</p>
-
-            <button onclick="showSection('packages')">
-                🎒 Explore Packages
-            </button>
-        </div>
-    </section>
-
-
-    <!-- INSTAGRAM / SOCIAL -->
-    <section class="service-card social-card">
-        <div class="service-icon">📸</div>
-
-        <div class="service-content">
-            <h2>NV Travels Social</h2>
-            <p>Posts • Videos • Like • Share</p>
-
-            <button onclick="showSection('social')">
-                📸 Open Social
-            </button>
-        </div>
-    </section>
-
-
-    <!-- DRIVER -->
-    <section class="service-card driver-card">
-        <div class="service-icon">🚗</div>
-
-        <div class="service-content">
-            <h2>Driver Control Desk</h2>
-            <p>Rides • Earnings • Commission</p>
-
-            <button onclick="showSection('driver')">
-                🚗 Driver Desk
-            </button>
-        </div>
-    </section>
-
-</main>
-
-
-<!-- RIDE SCREEN -->
-<section id="ride" class="page-section">
-
-    <button class="back-btn" onclick="goHome()">← Back</button>
-
-    <h1>🚕 Book a Ride</h1>
-
-    <div class="form-card">
-
-        <label>📍 Pickup Location</label>
-        <input type="text" id="pickup" placeholder="Enter pickup location">
-
-        <label>📍 Destination</label>
-        <input type="text" id="destination" placeholder="Enter destination">
-
-        <label>🚘 Select Vehicle</label>
-        <select id="vehicle">
-            <option value="">Select vehicle</option>
-            <option>Mini Car</option>
-            <option>Sedan</option>
-            <option>SUV</option>
-            <option>Innova</option>
-            <option>Tempo Traveller</option>
-        </select>
-
-        <button class="main-btn" onclick="calculateFare()">
-            💰 Calculate Fare
+        <button onclick="openScreen('ride')">
+            <span>🚕</span>
+            <b>Ride</b>
+            <small>Book a Taxi</small>
         </button>
 
-        <div id="fareResult"></div>
+        <button onclick="openScreen('hotel')">
+            <span>🏨</span>
+            <b>Hotel</b>
+            <small>Book a Hotel</small>
+        </button>
 
-        <button class="main-btn" onclick="requestRide()">
-            🚕 Request Ride
+        <button onclick="openScreen('packages')">
+            <span>🎒</span>
+            <b>Packages</b>
+            <small>Travel Packages</small>
+        </button>
+
+        <button onclick="openScreen('social')">
+            <span>▶️</span>
+            <b>Videos</b>
+            <small>NV Social</small>
         </button>
 
     </div>
@@ -146,17 +57,73 @@
 </section>
 
 
-<!-- HOTEL SCREEN -->
-<section id="hotel" class="page-section">
+<!-- VIDEOS / SOCIAL -->
+<section id="social" class="screen">
 
-    <button class="back-btn" onclick="goHome()">← Back</button>
+    <button class="back-button" onclick="openScreen('home')">← Home</button>
+
+    <h1>▶️ NV Travels</h1>
+
+    <div class="video-card">
+        <div class="video-placeholder">▶️</div>
+        <h3>Beautiful Travel Destination</h3>
+        <p>❤️ Like &nbsp;&nbsp; 💬 Comment &nbsp;&nbsp; 🔗 Share</p>
+    </div>
+
+    <div class="video-card">
+        <div class="video-placeholder">▶️</div>
+        <h3>Travel With NV Travels</h3>
+        <p>❤️ Like &nbsp;&nbsp; 💬 Comment &nbsp;&nbsp; 🔗 Share</p>
+    </div>
+
+</section>
+
+
+<!-- RIDE -->
+<section id="ride" class="screen">
+
+    <button class="back-button" onclick="openScreen('home')">← Home</button>
+
+    <h1>🚕 Book a Ride</h1>
+
+    <div class="form-card">
+
+        <label>📍 Pickup Location</label>
+        <input type="text" placeholder="Enter pickup location">
+
+        <label>📍 Destination</label>
+        <input type="text" placeholder="Enter destination">
+
+        <label>🚘 Select Vehicle</label>
+        <select>
+            <option>Select Vehicle</option>
+            <option>Mini</option>
+            <option>Sedan</option>
+            <option>SUV</option>
+            <option>Innova</option>
+            <option>Tempo Traveller</option>
+        </select>
+
+        <button class="main-button">
+            🚕 Find Ride
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- HOTEL -->
+<section id="hotel" class="screen">
+
+    <button class="back-button" onclick="openScreen('home')">← Home</button>
 
     <h1>🏨 Book Hotel</h1>
 
     <div class="form-card">
 
-        <label>📍 City / Destination</label>
-        <input type="text" placeholder="Where do you want hotel?">
+        <label>📍 Destination</label>
+        <input type="text" placeholder="City / Destination">
 
         <label>📅 Check-in</label>
         <input type="date">
@@ -173,21 +140,19 @@
             <option>5+ Guests</option>
         </select>
 
-        <button class="main-btn" onclick="searchHotel()">
+        <button class="main-button">
             🔍 Search Hotels
         </button>
-
-        <div id="hotelResult"></div>
 
     </div>
 
 </section>
 
 
-<!-- PACKAGES SCREEN -->
-<section id="packages" class="page-section">
+<!-- PACKAGES -->
+<section id="packages" class="screen">
 
-    <button class="back-btn" onclick="goHome()">← Back</button>
+    <button class="back-button" onclick="openScreen('home')">← Home</button>
 
     <h1>🎒 Travel Packages</h1>
 
@@ -204,85 +169,92 @@
             <option>1 Day</option>
             <option>2 Days</option>
             <option>3 Days</option>
-            <option>4 Days</option>
             <option>5 Days</option>
             <option>7 Days</option>
             <option>10+ Days</option>
         </select>
 
-        <label>👥 Kitne passengers?</label>
+        <label>👥 Passengers</label>
         <input type="number" placeholder="Number of passengers">
 
-        <label>🚘 Vehicle</label>
-        <select>
-            <option>Select vehicle</option>
-            <option>Car</option>
-            <option>Sedan</option>
-            <option>SUV</option>
-            <option>Innova</option>
-            <option>Tempo Traveller</option>
-        </select>
-
-        <label>🏨 Hotel</label>
-        <select>
-            <option>Hotel included</option>
-            <option>Hotel not required</option>
-        </select>
-
-        <button class="main-btn" onclick="searchPackage()">
-            🔍 Search Package
+        <button class="main-button">
+            🔍 Search Packages
         </button>
 
-        <div id="packageResult"></div>
+    </div>
+
+</section>
+
+
+<!-- SEARCH -->
+<section id="search" class="screen">
+
+    <h1>🔍 Search</h1>
+
+    <div class="search-box">
+        <input type="text" placeholder="Search rides, hotels, packages...">
+        <button>Search</button>
+    </div>
+
+</section>
+
+
+<!-- PROFILE -->
+<section id="profile" class="screen">
+
+    <div class="profile-top">
+        <div class="profile-avatar">👤</div>
+        <h1>My Profile</h1>
+        <p>Welcome to NV Travels</p>
+    </div>
+
+    <div class="profile-menu">
+
+        <button>🚕 My Rides</button>
+        <button>🏨 My Hotels</button>
+        <button>🎒 My Packages</button>
+        <button>📜 Booking History</button>
+        <button>⚙️ Settings</button>
 
     </div>
 
 </section>
 
 
-<!-- SOCIAL SCREEN -->
-<section id="social" class="page-section">
+<!-- FIXED BOTTOM NAVIGATION -->
+<nav class="bottom-nav">
 
-    <button class="back-btn" onclick="goHome()">← Back</button>
+    <button class="nav-item active-nav" onclick="openScreen('home')">
+        <span>⌂</span>
+        <small>Home</small>
+    </button>
 
-    <h1>📸 NV Travels Social</h1>
+    <button class="nav-item" onclick="openScreen('social')">
+        <span>▶</span>
+        <small>Videos</small>
+    </button>
 
-    <div class="social-buttons">
-        <button>📷 Posts</button>
-        <button>🎥 Videos</button>
-        <button>❤️ Likes</button>
-        <button>🔗 Share</button>
-    </div>
+    <button class="nav-item ride-nav" onclick="openScreen('ride')">
+        <span>🚕</span>
+        <small>Ride</small>
+        <b class="badge">5</b>
+    </button>
 
-    <div class="post-card">
-        <div class="post-image">🏔️</div>
-        <h2>Explore Beautiful Destinations</h2>
-        <p>Travel with NV Travels ✈️</p>
+    <button class="nav-item" onclick="openScreen('search')">
+        <span>⌕</span>
+        <small>Search</small>
+    </button>
 
-        <div class="post-actions">
-            <button>❤️ Like</button>
-            <button>💬 Comment</button>
-            <button>🔗 Share</button>
-        </div>
-    </div>
+    <button class="nav-item" onclick="openScreen('profile')">
+        <span>👤</span>
+        <small>Profile</small>
+        <i class="online-indicator"></i>
+    </button>
 
-</section>
+</nav>
 
 
-<!-- DRIVER SCREEN -->
-<section id="driver" class="page-section">
+<script src="script.js"></script>
 
-    <button class="back-btn" onclick="goHome()">← Back</button>
-
-    <h1>🚗 Driver Control Desk</h1>
-
-    <div class="driver-stats">
-
-        <div class="stat">
-            <span>🏁</span>
-            <h3>Completed Rides</h3>
-            <strong>0</strong>
-        </div>
-
-        <div class="stat">
-            <span>
+</body>
+</html>
