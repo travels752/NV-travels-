@@ -1,194 +1,144 @@
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NV Travels</title>
+    <link rel="stylesheet" href="style.css">
+</head>
 
-                <button
-                    class="main-btn"
-                    onclick="verifyOTP()">
-                    ✅ Verify OTP & Login
-                </button>
+<body>
 
-            </div>
-
-            <div id="recaptcha-container"
-                 style="margin-top:15px;">
-            </div>
-
-        </div>
+<!-- HEADER -->
+<header class="header">
+    <div>
+        <div class="logo">NV TRAVELSS</div>
+        <div class="tagline">Travel • Ride • Hotel • Packages</div>
     </div>
 
-</section>
+    <button class="menu-btn" onclick="openMenu()">☰</button>
+</header>
 
 
-<section id="screen-home" class="screen">
+<!-- MAIN HOME -->
+<main id="home">
 
-    <h2 class="section-title">🚕 Book a Ride</h2>
+    <section class="welcome">
+        <h1>Welcome to NV Travels 👋</h1>
+        <p>Your complete travel & booking partner</p>
+    </section>
 
-    <div class="map-box">
-        📍 Map / Live Location
-    </div>
 
-    <div class="card">
+    <!-- RIDE -->
+    <section class="service-card ride-card">
+        <div class="service-icon">🚕</div>
 
-        <div class="input-group">
-            <input id="pickup"
-                   type="text"
-                   placeholder="📍 Pickup Location">
+        <div class="service-content">
+            <h2>Book a Ride</h2>
+            <p>Taxi • Cab • Local • Outstation</p>
+
+            <button onclick="showSection('ride')">
+                🚕 Book Ride
+            </button>
         </div>
+    </section>
 
-        <div class="input-group">
-            <input id="drop"
-                   type="text"
-                   placeholder="📍 Destination">
+
+    <!-- HOTEL -->
+    <section class="service-card hotel-card">
+        <div class="service-icon">🏨</div>
+
+        <div class="service-content">
+            <h2>Book Hotel</h2>
+            <p>Find hotels for your trip</p>
+
+            <button onclick="showSection('hotel')">
+                🏨 Book Hotel
+            </button>
         </div>
+    </section>
 
-        <button class="main-btn"
-                onclick="calculateFare()">
-            Calculate Ride Fare
+
+    <!-- PACKAGES -->
+    <section class="service-card package-card">
+        <div class="service-icon">🎒</div>
+
+        <div class="service-content">
+            <h2>Travel Packages</h2>
+            <p>Choose destination & number of days</p>
+
+            <button onclick="showSection('packages')">
+                🎒 Explore Packages
+            </button>
+        </div>
+    </section>
+
+
+    <!-- INSTAGRAM / SOCIAL -->
+    <section class="service-card social-card">
+        <div class="service-icon">📸</div>
+
+        <div class="service-content">
+            <h2>NV Travels Social</h2>
+            <p>Posts • Videos • Like • Share</p>
+
+            <button onclick="showSection('social')">
+                📸 Open Social
+            </button>
+        </div>
+    </section>
+
+
+    <!-- DRIVER -->
+    <section class="service-card driver-card">
+        <div class="service-icon">🚗</div>
+
+        <div class="service-content">
+            <h2>Driver Control Desk</h2>
+            <p>Rides • Earnings • Commission</p>
+
+            <button onclick="showSection('driver')">
+                🚗 Driver Desk
+            </button>
+        </div>
+    </section>
+
+</main>
+
+
+<!-- RIDE SCREEN -->
+<section id="ride" class="page-section">
+
+    <button class="back-btn" onclick="goHome()">← Back</button>
+
+    <h1>🚕 Book a Ride</h1>
+
+    <div class="form-card">
+
+        <label>📍 Pickup Location</label>
+        <input type="text" id="pickup" placeholder="Enter pickup location">
+
+        <label>📍 Destination</label>
+        <input type="text" id="destination" placeholder="Enter destination">
+
+        <label>🚘 Select Vehicle</label>
+        <select id="vehicle">
+            <option value="">Select vehicle</option>
+            <option>Mini Car</option>
+            <option>Sedan</option>
+            <option>SUV</option>
+            <option>Innova</option>
+            <option>Tempo Traveller</option>
+        </select>
+
+        <button class="main-btn" onclick="calculateFare()">
+            💰 Calculate Fare
         </button>
 
-        <div id="fare-window"
-             style="display:none; justify-content:space-between; align-items:center; margin-top:20px;">
+        <div id="fareResult"></div>
 
-            <strong>Estimated Ride Fare</strong>
-
-            <strong id="fare-amount">
-                ₹0.00
-            </strong>
-
-        </div>
-
-        <button id="request-btn"
-                class="secondary-btn"
-                onclick="sendDriverRequest()"
-                style="display:none;">
-            🚗 Request Driver
-        </button>
-
-    </div>
-
-</section>
-
-
-<section id="screen-packages" class="screen">
-
-    <h2 class="section-title">📦 Travel Packages</h2>
-
-    <div class="card">
-
-        <div class="input-group">
-            <input id="package-from"
-                   type="text"
-                   placeholder="📍 Kahan se?">
-        </div>
-
-        <div class="input-group">
-            <input id="package-to"
-                   type="text"
-                   placeholder="📍 Kahan tak?">
-        </div>
-
-        <div class="input-group">
-            <input id="package-days"
-                   type="number"
-                   min="1"
-                   placeholder="📅 Kitne din?">
-        </div>
-
-        <div class="input-group">
-            <input id="package-passengers"
-                   type="number"
-                   min="1"
-                   placeholder="👥 Kitne passengers?">
-        </div>
-
-        <div class="input-group">
-            <select id="package-vehicle">
-                <option value="">🚗 Vehicle select karo</option>
-                <option>Car</option>
-                <option>Sedan</option>
-                <option>SUV</option>
-                <option>Tempo Traveller</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <select id="package-hotel">
-                <option value="">🏨 Hotel included?</option>
-                <option>Yes</option>
-                <option>No</option>
-            </select>
-        </div>
-
-        <button class="main-btn"
-                onclick="searchPackages()">
-            🔎 Package Search Karo
-        </button>
-
-    </div>
-
-    <div id="package-results"></div>
-
-</section>
-
-
-<section id="screen-driver-panel" class="screen">
-
-    <h2 class="section-title">🚗 Driver Control Desk</h2>
-
-    <div class="stat-grid">
-
-        <div class="stat-card">
-            <div>Completed Rides</div>
-            <div id="drv-rides"
-                 class="stat-val">
-                0
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div>Driver Earnings</div>
-            <div id="drv-earnings"
-                 class="stat-val">
-                ₹0.00
-            </div>
-        </div>
-
-    </div>
-
-    <div class="card">
-
-        <h3>Driver Commission</h3>
-
-        <p style="margin-top:10px;">
-            NV Travels commission: 15%
-        </p>
-
-        <p style="margin-top:8px;">
-            Driver receives 85% of completed ride fare.
-        </p>
-
-    </div>
-
-</section>
-
-
-<section id="screen-hotels" class="screen">
-
-    <h2 class="section-title">🏨 Hotels</h2>
-
-    <div class="card">
-
-        <h3>Find Hotels</h3>
-
-        <div class="input-group"
-             style="margin-top:15px;">
-
-            <input type="text"
-                   placeholder="📍 City / Destination">
-
-        </div>
-
-        <button class="main-btn">
-            Search Hotels
+        <button class="main-btn" onclick="requestRide()">
+            🚕 Request Ride
         </button>
 
     </div>
@@ -196,697 +146,143 @@
 </section>
 
 
-<section id="screen-owner-panel" class="screen">
+<!-- HOTEL SCREEN -->
+<section id="hotel" class="page-section">
 
-    <h2 class="section-title">🏨 Hotel Owner Console</h2>
+    <button class="back-btn" onclick="goHome()">← Back</button>
 
-    <div class="card">
+    <h1>🏨 Book Hotel</h1>
 
-        <h3>Business Pass</h3>
+    <div class="form-card">
 
-        <p style="margin-top:10px;">
-            Monthly Pass: ₹1,000
-        </p>
+        <label>📍 City / Destination</label>
+        <input type="text" placeholder="Where do you want hotel?">
 
-        <p id="pass-badge"
-           style="margin-top:8px;">
-            Not Active
-        </p>
+        <label>📅 Check-in</label>
+        <input type="date">
 
-        <button class="main-btn"
-                onclick="buyOwnerPass()"
-                style="margin-top:15px;">
-            Activate Business Pass
+        <label>📅 Check-out</label>
+        <input type="date">
+
+        <label>👥 Guests</label>
+        <select>
+            <option>1 Guest</option>
+            <option>2 Guests</option>
+            <option>3 Guests</option>
+            <option>4 Guests</option>
+            <option>5+ Guests</option>
+        </select>
+
+        <button class="main-btn" onclick="searchHotel()">
+            🔍 Search Hotels
         </button>
 
-    </div>
-
-    <div class="card"
-         style="margin-top:15px;">
-
-        <h3>Add Hotel Listing</h3>
-
-        <div class="input-group"
-             style="margin-top:15px;">
-
-            <input id="h-name"
-                   type="text"
-                   placeholder="🏨 Hotel Name">
-
-        </div>
-
-        <div class="input-group">
-
-            <input id="h-price"
-                   type="number"
-                   placeholder="💰 Price per Night">
-
-        </div>
-
-        <button class="main-btn"
-                onclick="handleHotelAdd()">
-            Add Hotel
-        </button>
+        <div id="hotelResult"></div>
 
     </div>
 
 </section>
 
 
-<section id="screen-social" class="screen">
+<!-- PACKAGES SCREEN -->
+<section id="packages" class="page-section">
 
-    <h2 class="section-title">🌍 NV Social</h2>
+    <button class="back-btn" onclick="goHome()">← Back</button>
 
-    <div class="feed-card">
+    <h1>🎒 Travel Packages</h1>
 
-        <div class="feed-header">
-            👤 NV Traveller
-        </div>
+    <div class="form-card">
 
-        <div class="feed-img"
-             style="display:flex; align-items:center; justify-content:center; font-size:50px;">
-            🏔️
-        </div>
+        <label>📍 Kahan se?</label>
+        <input type="text" placeholder="Starting location">
 
-        <div class="feed-actions">
+        <label>📍 Kahan tak?</label>
+        <input type="text" placeholder="Destination">
 
-            <span onclick="triggerSocialAction('Like')">
-                ❤️
-            </span>
+        <label>📅 Kitne din?</label>
+        <select>
+            <option>1 Day</option>
+            <option>2 Days</option>
+            <option>3 Days</option>
+            <option>4 Days</option>
+            <option>5 Days</option>
+            <option>7 Days</option>
+            <option>10+ Days</option>
+        </select>
 
-            <span onclick="triggerSocialAction('Comment')">
-                💬
-            </span>
+        <label>👥 Kitne passengers?</label>
+        <input type="number" placeholder="Number of passengers">
 
-            <span onclick="triggerSocialAction('Share')">
-                📤
-            </span>
+        <label>🚘 Vehicle</label>
+        <select>
+            <option>Select vehicle</option>
+            <option>Car</option>
+            <option>Sedan</option>
+            <option>SUV</option>
+            <option>Innova</option>
+            <option>Tempo Traveller</option>
+        </select>
 
-        </div>
+        <label>🏨 Hotel</label>
+        <select>
+            <option>Hotel included</option>
+            <option>Hotel not required</option>
+        </select>
 
-        <div class="feed-details">
-            Beautiful travel destination!
-        </div>
-
-    </div>
-
-</section>
-
-
-<section id="screen-profile" class="screen">
-
-    <h2 class="section-title">👤 Profile</h2>
-
-    <div class="card">
-
-        <h3>Welcome to NV Travels</h3>
-
-        <p style="margin-top:10px;">
-            Your account is ready.
-        </p>
-
-        <button class="secondary-btn"
-                onclick="logout()">
-            Logout
+        <button class="main-btn" onclick="searchPackage()">
+            🔍 Search Package
         </button>
 
+        <div id="packageResult"></div>
+
     </div>
 
 </section>
 
 
-<nav id="global-nav"
-     class="bottom-nav"
-     style="display:none;">
+<!-- SOCIAL SCREEN -->
+<section id="social" class="page-section">
 
-    <button id="tab-home"
-            class="nav-item active"
-            onclick="switchTab('home')">
-        <span class="nav-icon">🏠</span>
-        <span>Home</span>
-    </button>
+    <button class="back-btn" onclick="goHome()">← Back</button>
 
-    <button id="tab-packages"
-            class="nav-item"
-            onclick="switchTab('packages')">
-        <span class="nav-icon">📦</span>
-        <span>Packages</span>
-    </button>
+    <h1>📸 NV Travels Social</h1>
 
-    <button id="tab-hotels"
-            class="nav-item"
-            onclick="switchTab('hotels')">
-        <span class="nav-icon">🏨</span>
-        <span>Hotels</span>
-    </button>
+    <div class="social-buttons">
+        <button>📷 Posts</button>
+        <button>🎥 Videos</button>
+        <button>❤️ Likes</button>
+        <button>🔗 Share</button>
+    </div>
 
-    <button id="tab-social"
-            class="nav-item"
-            onclick="switchTab('social')">
-        <span class="nav-icon">🌍</span>
-        <span>Social</span>
-    </button>
+    <div class="post-card">
+        <div class="post-image">🏔️</div>
+        <h2>Explore Beautiful Destinations</h2>
+        <p>Travel with NV Travels ✈️</p>
 
-    <button id="tab-profile"
-            class="nav-item"
-            onclick="switchTab('profile')">
-        <span class="nav-icon">👤</span>
-        <span>Profile</span>
-    </button>
+        <div class="post-actions">
+            <button>❤️ Like</button>
+            <button>💬 Comment</button>
+            <button>🔗 Share</button>
+        </div>
+    </div>
 
-</nav>
+</section>
 
 
-<script type="module">
+<!-- DRIVER SCREEN -->
+<section id="driver" class="page-section">
 
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    <button class="back-btn" onclick="goHome()">← Back</button>
 
-import {
-    getAuth,
-    RecaptchaVerifier,
-    signInWithPhoneNumber
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+    <h1>🚗 Driver Control Desk</h1>
 
+    <div class="driver-stats">
 
-const firebaseConfig = {
+        <div class="stat">
+            <span>🏁</span>
+            <h3>Completed Rides</h3>
+            <strong>0</strong>
+        </div>
 
-    apiKey: "AIzaSyDZ9xZTV5HmF1PjmYvr4jQ1_cOw7pADWf8",
-
-    authDomain: "nv-travels.firebaseapp.com",
-
-    projectId: "nv-travels",
-
-    storageBucket: "nv-travels.firebasestorage.app",
-
-    messagingSenderId: "1030027773089",
-
-    appId: "1:1030027773089:web:42bd462370fe04bae25ce0",
-
-    measurementId: "G-694BTN9C1T"
-
-};
-
-
-const app = initializeApp(firebaseConfig);
-
-const auth = getAuth(app);
-
-let confirmationResult = null;
-
-let recaptchaVerifier = null;
-
-
-/* ================================
-   RECAPTCHA SETUP
-================================ */
-
-async function setupRecaptcha() {
-
-    if (recaptchaVerifier) {
-        return recaptchaVerifier;
-    }
-
-    recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-            size: "normal"
-        }
-    );
-
-    await recaptchaVerifier.render();
-
-    return recaptchaVerifier;
-}
-
-
-/* ================================
-   SEND OTP
-================================ */
-
-window.sendOTP = async function () {
-
-    const phoneInput =
-        document.getElementById("auth-phone");
-
-    let phone =
-        phoneInput.value.trim();
-
-    if (!phone) {
-
-        alert(
-            "📱 Phone number enter karo.\n\nExample: +919876543210"
-        );
-
-        return;
-    }
-
-
-    /*
-       Agar user 9876543210 likhe,
-       to automatically +91 add karenge.
-    */
-
-    if (/^[6-9]\d{9}$/.test(phone)) {
-        phone = "+91" + phone;
-        phoneInput.value = phone;
-    }
-
-
-    if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
-
-        alert(
-            "❌ Phone number galat hai.\n\nExample:\n+919876543210"
-        );
-
-        return;
-    }
-
-
-    const button =
-        document.getElementById("send-otp-btn");
-
-    button.disabled = true;
-    button.innerText = "⏳ Sending OTP...";
-
-
-    try {
-
-        const verifier =
-            await setupRecaptcha();
-
-
-        confirmationResult =
-            await signInWithPhoneNumber(
-                auth,
-                phone,
-                verifier
-            );
-
-
-        document.getElementById("otp-section")
-            .style.display = "block";
-
-
-        alert(
-            "✅ OTP tumhare phone par bhej diya gaya."
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Firebase OTP Error:",
-            error
-        );
-
-
-        /*
-           Failed attempt ke baad
-           reCAPTCHA reset.
-        */
-
-        if (recaptchaVerifier) {
-
-            try {
-                recaptchaVerifier.clear();
-            } catch (e) {
-                console.log(e);
-            }
-
-            recaptchaVerifier = null;
-        }
-
-
-        document.getElementById(
-            "recaptcha-container"
-        ).innerHTML = "";
-
-
-        let message =
-            error?.message ||
-            "Unknown Firebase error";
-
-
-        alert(
-            "❌ OTP send nahi hua.\n\n" +
-            message
-        );
-
-
-    } finally {
-
-        button.disabled = false;
-        button.innerText = "📲 Send OTP";
-
-    }
-
-};
-
-
-/* ================================
-   VERIFY OTP
-================================ */
-
-window.verifyOTP = async function () {
-
-    const code =
-        document.getElementById("auth-otp")
-        .value
-        .trim();
-
-
-    if (!confirmationResult) {
-
-        alert(
-            "⚠️ Pehle Send OTP dabao."
-        );
-
-        return;
-    }
-
-
-    if (!/^\d{6}$/.test(code)) {
-
-        alert(
-            "🔐 6 digit OTP enter karo."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        const result =
-            await confirmationResult.confirm(code);
-
-
-        appState.isLoggedIn = true;
-
-
-        appState.userName =
-            result.user.phoneNumber ||
-            "Traveler";
-
-
-        document.getElementById(
-            "screen-login"
-        ).classList.remove("active-screen");
-
-
-        document.getElementById(
-            "global-nav"
-        ).style.display = "flex";
-
-
-        if (appState.role === "customer") {
-
-            switchTab("home");
-
-        }
-
-
-        if (appState.role === "driver") {
-
-            switchTab("driver-panel");
-
-        }
-
-
-        if (appState.role === "owner") {
-
-            switchTab("owner-panel");
-
-        }
-
-
-        alert(
-            "✅ Login Successfully!\n\nWelcome to NV Travels."
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            <script type="module">
-
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-
-import {
-    getAuth,
-    RecaptchaVerifier,
-    signInWithPhoneNumber
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-
-
-const firebaseConfig = {
-    apiKey: "AIzaSyDZ9xZTV5HmF1PjmYvr4jQ1_cOw7pADWf8",
-    authDomain: "nv-travels.firebaseapp.com",
-    projectId: "nv-travels",
-    storageBucket: "nv-travels.firebasestorage.app",
-    messagingSenderId: "1030027773089",
-    appId: "1:1030027773089:web:42bd462370fe04bae25ce0",
-    measurementId: "G-694BTN9C1T"
-};
-
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-let confirmationResult = null;
-let recaptchaVerifier = null;
-
-
-/* ================================
-   SEND OTP
-================================ */
-
-window.sendOTP = async function () {
-
-    const phoneInput =
-        document.getElementById("auth-phone");
-
-    let phone =
-        phoneInput.value.trim();
-
-    if (!phone) {
-        alert("📱 Phone number enter karo.\n\nExample: +919876543210");
-        return;
-    }
-
-    /* 10 digit Indian number */
-    if (/^[6-9]\d{9}$/.test(phone)) {
-        phone = "+91" + phone;
-        phoneInput.value = phone;
-    }
-
-    /* E.164 format check */
-    if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
-        alert(
-            "❌ Phone number galat hai.\n\nExample:\n+919876543210"
-        );
-        return;
-    }
-
-    const button =
-        document.getElementById("send-otp-btn");
-
-    button.disabled = true;
-    button.innerText = "⏳ Sending OTP...";
-
-    try {
-
-        /*
-         * Invisible reCAPTCHA
-         * Send OTP button itself is the verifier element.
-         */
-
-        if (!recaptchaVerifier) {
-
-            recaptchaVerifier =
-                new RecaptchaVerifier(
-                    auth,
-                    "send-otp-btn",
-                    {
-                        size: "invisible",
-
-                        callback: () => {
-                            console.log(
-                                "✅ reCAPTCHA verified"
-                            );
-                        },
-
-                        "expired-callback": () => {
-                            console.log(
-                                "⚠️ reCAPTCHA expired"
-                            );
-                        }
-                    }
-                );
-
-            await recaptchaVerifier.render();
-        }
-
-
-        confirmationResult =
-            await signInWithPhoneNumber(
-                auth,
-                phone,
-                recaptchaVerifier
-            );
-
-
-        document.getElementById(
-            "otp-section"
-        ).style.display = "block";
-
-
-        alert(
-            "✅ OTP tumhare phone par bhej diya gaya."
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Firebase OTP Error:",
-            error
-        );
-
-        /*
-         * reCAPTCHA ko reset karo
-         */
-
-        if (recaptchaVerifier) {
-
-            try {
-                recaptchaVerifier.clear();
-            } catch (e) {
-                console.log(e);
-            }
-
-            recaptchaVerifier = null;
-        }
-
-
-        let message =
-            error?.message ||
-            "Unknown Firebase error";
-
-
-        alert(
-            "❌ OTP send nahi hua.\n\n" +
-            "Firebase: " +
-            message
-        );
-
-
-    } finally {
-
-        button.disabled = false;
-        button.innerText = "📲 Send OTP";
-
-    }
-
-};
-
-
-/* ================================
-   VERIFY OTP
-================================ */
-
-window.verifyOTP = async function () {
-
-    const code =
-        document.getElementById("auth-otp")
-        .value
-        .trim();
-
-
-    if (!confirmationResult) {
-
-        alert(
-            "⚠️ Pehle Send OTP dabao."
-        );
-
-        return;
-    }
-
-
-    if (!/^\d{6}$/.test(code)) {
-
-        alert(
-            "🔐 6 digit OTP enter karo."
-        );
-
-        return;
-    }
-
-
-    try {
-
-        const result =
-            await confirmationResult.confirm(code);
-
-
-        appState.isLoggedIn = true;
-
-        appState.userName =
-            result.user.phoneNumber ||
-            "Traveler";
-
-
-        document.getElementById(
-            "screen-login"
-        ).classList.remove("active-screen");
-
-
-        document.getElementById(
-            "global-nav"
-        ).style.display = "flex";
-
-
-        if (appState.role === "customer") {
-            switchTab("home");
-        }
-
-        if (appState.role === "driver") {
-            switchTab("driver-panel");
-        }
-
-        if (appState.role === "owner") {
-            switchTab("owner-panel");
-        }
-
-
-        alert(
-            "✅ Login Successfully!\n\nWelcome to NV Travels."
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Firebase Verify Error:",
-            error
-        );
-
-        alert(
-            "❌ OTP galat hai ya expire ho gaya.\n\n" +
-            (error?.message || "Verification failed")
-        );
-
-    }
-
-};
-
-</script>
-<script src="script.js"></script>
-
-</body>
->
+        <div class="stat">
+            <span>
