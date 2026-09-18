@@ -306,3 +306,139 @@ h1 {
         font-size: 9px;
     }
 }
+/* =========================
+   DRIVER DASHBOARD
+   ========================= */
+
+.driver-status-card {
+    background: white;
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 5px 18px rgba(0,0,0,.08);
+    margin-bottom: 18px;
+}
+
+.driver-status-card small {
+    color: #777;
+}
+
+.driver-status-card h2 {
+    margin-top: 5px;
+    font-size: 18px;
+}
+
+.status-button {
+    border: none;
+    border-radius: 12px;
+    padding: 11px 14px;
+    background: #090d14;
+    color: white;
+    font-weight: bold;
+}
+
+.driver-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.driver-stat {
+    background: white;
+    border-radius: 16px;
+    padding: 15px 8px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,.07);
+}
+
+.driver-stat span {
+    display: block;
+    font-size: 25px;
+    margin-bottom: 5px;
+}
+
+.driver-stat b {
+    display: block;
+    font-size: 17px;
+}
+
+.driver-stat small {
+    color: #777;
+    font-size: 11px;
+}
+
+.ride-request-card {
+    background: white;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 5px 18px rgba(0,0,0,.08);
+    margin-bottom: 18px;
+}
+
+.request-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.request-top span {
+    background: #e8fff1;
+    color: #0a9d4b;
+    padding: 5px 9px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.ride-request-card p {
+    margin: 10px 0;
+    color: #444;
+    line-height: 1.4;
+}
+
+.driver-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.accept-button,
+.reject-button {
+    border: none;
+    padding: 14px 8px;
+    border-radius: 12px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.accept-button {
+    background: #12a957;
+}
+
+.reject-button {
+    background: #e5394f;
+}
+
+@media (max-width: 380px) {
+
+    .driver-status-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .driver-stats {
+        gap: 7px;
+    }
+
+    .driver-stat {
+        padding: 12px 5px;
+    }
+
+}
