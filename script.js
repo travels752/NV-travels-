@@ -1,41 +1,46 @@
-// ===============================
-// NV TRAVELSS - APP FUNCTIONALITY
-// ===============================
+// NV TRAVELSS APP
 
 function openScreen(screenId) {
 
-    // Sabhi screens hide karo
+    // सभी screens hide
     const screens = document.querySelectorAll(".screen");
 
-    screens.forEach(function(screen) {
+    screens.forEach(screen => {
         screen.classList.remove("active");
     });
 
-    // Selected screen show karo
+    // selected screen show
     const selectedScreen = document.getElementById(screenId);
 
     if (selectedScreen) {
         selectedScreen.classList.add("active");
     }
 
-    // Bottom navigation active state
+    // bottom navigation active state
     const navItems = document.querySelectorAll(".nav-item");
 
-    navItems.forEach(function(item) {
+    navItems.forEach(item => {
         item.classList.remove("active-nav");
     });
 
-    navItems.forEach(function(item) {
+    // current navigation button active
+    navItems.forEach(item => {
 
-        const clickCode = item.getAttribute("onclick");
+        const text = item.innerText.toLowerCase();
 
-        if (clickCode && clickCode.includes("'" + screenId + "'")) {
+        if (
+            (screenId === "home" && text.includes("home")) ||
+            (screenId === "social" && text.includes("videos")) ||
+            (screenId === "ride" && text.includes("ride")) ||
+            (screenId === "search" && text.includes("search")) ||
+            (screenId === "profile" && text.includes("profile"))
+        ) {
             item.classList.add("active-nav");
         }
 
     });
 
-    // Page ko top par le jao
+    // page ko top par le jao
     window.scrollTo({
         top: 0,
         behavior: "smooth"
@@ -47,183 +52,157 @@ function openScreen(screenId) {
 // RIDE BOOKING
 // ===============================
 
-document.addEventListener("DOMContentLoaded", function() {
+function findRide() {
 
-    const buttons = document.querySelectorAll(".main-button");
+    const inputs = document.querySelectorAll("#ride input");
+    const pickup = inputs[0].value.trim();
+    const destination = inputs[1].value.trim();
 
-    buttons.forEach(function(button) {
+    const vehicleSelect = document.querySelector("#ride select");
+    const vehicle = vehicleSelect.value;
 
-        button.addEventListener("click", function() {
-
-            const parent = button.closest(".form-card");
-
-            if (!parent) return;
-
-            // Ride
-            if (parent.closest("#ride")) {
-
-                const inputs = parent.querySelectorAll("input");
-                const vehicle = parent.querySelector("select");
-
-                const pickup = inputs[0].value.trim();
-                const destination = inputs[1].value.trim();
-
-                if (!pickup || !destination || vehicle.value === "Select Vehicle") {
-                    alert("Please enter pickup, destination and select vehicle.");
-                    return;
-                }
-
-                alert(
-                    "🚕 Ride Request Sent!\n\n" +
-                    "Pickup: " + pickup + "\n" +
-                    "Destination: " + destination + "\n" +
-                    "Vehicle: " + vehicle.value + "\n\n" +
-                    "Nearby drivers will receive your request."
-                );
-
-                return;
-            }
-
-
-            // Hotel
-            if (parent.closest("#hotel")) {
-
-                const inputs = parent.querySelectorAll("input");
-                const destination = inputs[0].value.trim();
-                const checkIn = inputs[1].value;
-                const checkOut = inputs[2].value;
-
-                if (!destination || !checkIn || !checkOut) {
-                    alert("Please enter destination, check-in and check-out dates.");
-                    return;
-                }
-
-                alert(
-                    "🏨 Hotel Search Started!\n\n" +
-                    "Destination: " + destination + "\n" +
-                    "Check-in: " + checkIn + "\n" +
-                    "Check-out: " + checkOut + "\n\n" +
-                    "Searching available hotels..."
-                );
-
-                return;
-            }
-
-
-            // Packages
-            if (parent.closest("#packages")) {
-
-                const inputs = parent.querySelectorAll("input");
-                const selects = parent.querySelectorAll("select");
-
-                const from = inputs[0].value.trim();
-                const destination = inputs[1].value.trim();
-                const days = selects[0].value;
-                const passengers = inputs[2].value.trim();
-
-                if (!from || !destination || !passengers) {
-                    alert("Please fill all package details.");
-                    return;
-                }
-
-                alert(
-                    "🎒 Package Search Started!\n\n" +
-                    "From: " + from + "\n" +
-                    "Destination: " + destination + "\n" +
-                    "Duration: " + days + "\n" +
-                    "Passengers: " + passengers + "\n\n" +
-                    "Finding travel packages..."
-                );
-
-                return;
-            }
-
-        });
-
-    });
-
-
-    // ===============================
-    // SEARCH
-    // ===============================
-
-    const searchButton = document.querySelector("#search .search-box button");
-
-    if (searchButton) {
-
-        searchButton.addEventListener("click", function() {
-
-            const searchInput =
-                document.querySelector("#search .search-box input");
-
-            const query = searchInput.value.trim();
-
-            if (!query) {
-                alert("Please type something to search.");
-                return;
-            }
-
-            alert(
-                "🔍 Searching NV Travels for:\n\n" +
-                query
-            );
-
-        });
-
+    if (pickup === "") {
+        alert("Please enter pickup location.");
+        return;
     }
 
+    if (destination === "") {
+        alert("Please enter destination.");
+        return;
+    }
 
-    // ===============================
-    // PROFILE BUTTONS
-    // ===============================
+    if (vehicle === "Select Vehicle") {
+        alert("Please select a vehicle.");
+        return;
+    }
 
-    const profileButtons =
-        document.querySelectorAll("#profile .profile-menu button");
+    // booking ID
+    const bookingId =
+        "NV" + Date.now().toString().slice(-6);
 
-    profileButtons.forEach(function(button) {
+    alert(
+        "Ride Request Sent Successfully! 🚕\n\n" +
+        "Booking ID: " + bookingId + "\n" +
+        "Pickup: " + pickup + "\n" +
+        "Destination: " + destination + "\n" +
+        "Vehicle: " + vehicle + "\n\n" +
+        "Driver request bheji ja rahi hai."
+    );
 
-        button.addEventListener("click", function() {
+    // save booking
+    const booking = {
+        id: bookingId,
+        pickup: pickup,
+        destination: destination,
+        vehicle: vehicle,
+        status: "Searching Driver",
+        time: new Date().toLocaleString()
+    };
 
-            alert(
-                button.innerText +
-                "\n\nThis section is ready for the next development step."
-            );
-
-        });
-
-    });
-
-
-    // ===============================
-    // SOCIAL VIDEO ACTION
-    // ===============================
-
-    const videoCards =
-        document.querySelectorAll(".video-card");
-
-    videoCards.forEach(function(card) {
-
-        card.addEventListener("click", function() {
-
-            alert(
-                "▶️ NV Travels Video\n\n" +
-                "Like ❤️  Comment 💬  Share 🔗"
-            );
-
-        });
-
-    });
-
-});
+    localStorage.setItem(
+        "nv_current_ride",
+        JSON.stringify(booking)
+    );
+}
 
 
 // ===============================
-// START APP
+// HOTEL SEARCH
 // ===============================
 
-document.addEventListener("DOMContentLoaded", function() {
+function searchHotels() {
 
-    // Home ko default screen rakho
-    openScreen("home");
+    const hotelSection = document.getElementById("hotel");
+
+    const destination =
+        hotelSection.querySelector("input[type='text']").value.trim();
+
+    if (destination === "") {
+        alert("Please enter hotel destination.");
+        return;
+    }
+
+    alert(
+        "Hotel search request created 🏨\n\n" +
+        "Destination: " + destination
+    );
+}
+
+
+// ===============================
+// PACKAGE SEARCH
+// ===============================
+
+function searchPackages() {
+
+    const packageSection =
+        document.getElementById("packages");
+
+    const inputs =
+        packageSection.querySelectorAll("input");
+
+    const from = inputs[0].value.trim();
+    const destination = inputs[1].value.trim();
+    const passengers = inputs[2].value.trim();
+
+    const days =
+        packageSection.querySelector("select").value;
+
+    if (from === "") {
+        alert("Please enter starting location.");
+        return;
+    }
+
+    if (destination === "") {
+        alert("Please enter destination.");
+        return;
+    }
+
+    alert(
+        "Package Search Created 🎒\n\n" +
+        "From: " + from + "\n" +
+        "Destination: " + destination + "\n" +
+        "Duration: " + days + "\n" +
+        "Passengers: " +
+        (passengers || "Not specified")
+    );
+}
+
+
+// ===============================
+// APP START
+// ===============================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // Ride button
+    const rideButton =
+        document.querySelector("#ride .main-button");
+
+    if (rideButton) {
+        rideButton.addEventListener("click", findRide);
+    }
+
+    // Hotel button
+    const hotelButton =
+        document.querySelector("#hotel .main-button");
+
+    if (hotelButton) {
+        hotelButton.addEventListener(
+            "click",
+            searchHotels
+        );
+    }
+
+    // Package button
+    const packageButton =
+        document.querySelector("#packages .main-button");
+
+    if (packageButton) {
+        packageButton.addEventListener(
+            "click",
+            searchPackages
+        );
+    }
 
 });
