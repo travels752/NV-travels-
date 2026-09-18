@@ -1,5 +1,5 @@
 /* =========================================
-   NV TRAVELSS - FINAL APP LOGIC
+   NV TRAVELSS - FINAL APP LOGIC + FIREBASE OTP
 ========================================= */
 
 let selectedRole = "customer";
@@ -8,6 +8,9 @@ let driverOnline = false;
 let driverEarnings = 0;
 let driverRides = 0;
 let pendingRide = true;
+
+let confirmationResult = null;
+let recaptchaVerifier = null;
 
 
 /* =========================================
@@ -36,29 +39,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     const loginButton = document.getElementById("loginButton");
+    const verifyOtpButton = document.getElementById("verifyOtpButton");
 
-    loginButton.addEventListener("click", login);
+    if (loginButton) {
+        loginButton.addEventListener("click", login);
+    }
+
+    if (verifyOtpButton) {
+        verifyOtpButton.addEventListener("click", verifyOTP);
+    }
 
 });
 
 
 /* =========================================
-   LOGIN
+   FIREBASE OTP LOGIN
 ========================================= */
 
 function login() {
 
     const nameInput = document.getElementById("loginName");
     const phoneInput = document.getElementById("loginPhone");
+    const otpInput = document.getElementById("otpInput");
+    const loginButton = document.getElementById("loginButton");
+    const verifyButton = document.getElementById("verifyOtpButton");
+    const message = document.getElementById("otpMessage");
 
     const name = nameInput.value.trim();
-    const phone = phoneInput.value.trim();
+    let phone = phoneInput.value.trim();
+
 
     if (name === "") {
         alert("Please enter your name.");
         nameInput.focus();
         return;
     }
+
 
     if (phone === "") {
         alert("Please enter your mobile number.");
@@ -67,9 +83,168 @@ function login() {
     }
 
 
+    phone = phone.replace(/\D/g, "");
+
+
+    if (phone.length === 10) {
+        phone = "+91" + phone;
+    }
+
+
+    if (!phone.startsWith("+91") || phone.length !== 13) {
+        alert("Please enter a valid 10 digit Indian mobile number.");
+        phoneInput.focus();
+        return;
+    }
+
+
     localStorage.setItem("nvUserName", name);
     localStorage.setItem("nvUserRole", selectedRole);
     localStorage.setItem("nvUserPhone", phone);
+
+
+    message.style.display = "block";
+    message.textContent = "Sending OTP...";
+
+
+    loginButton.disabled = true;
+
+
+    try {
+
+        if (!recaptchaVerifier) {
+
+            recaptchaVerifier =
+                new firebase.auth.RecaptchaVerifier(
+                    "recaptcha-container",
+                    {
+                        size: "normal"
+                    }
+                );
+
+        }
+
+
+        firebase.auth()
+            .signInWithPhoneNumber(phone, recaptchaVerifier)
+
+            .then(function (result) {
+
+                confirmationResult = result;
+
+                message.textContent =
+                    "OTP sent to your mobile number.";
+
+                otpInput.style.display = "block";
+
+                verifyButton.style.display = "block";
+
+                loginButton.style.display = "none";
+
+                otpInput.focus();
+
+            })
+
+            .catch(function (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    "OTP send nahi hua: " + error.message;
+
+                loginButton.disabled = false;
+
+                if (recaptchaVerifier) {
+                    recaptchaVerifier.clear();
+                    recaptchaVerifier = null;
+                }
+
+            });
+
+    } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+            "Firebase OTP error: " + error.message;
+
+        loginButton.disabled = false;
+
+    }
+
+}
+
+
+/* =========================================
+   VERIFY OTP
+========================================= */
+
+function verifyOTP() {
+
+    const otpInput =
+        document.getElementById("otpInput");
+
+    const message =
+        document.getElementById("otpMessage");
+
+    const code =
+        otpInput.value.trim();
+
+
+    if (code.length !== 6) {
+
+        alert("Please enter the 6 digit OTP.");
+
+        otpInput.focus();
+
+        return;
+    }
+
+
+    if (!confirmationResult) {
+
+        alert("Please request OTP first.");
+
+        return;
+    }
+
+
+    message.textContent =
+        "Verifying OTP...";
+
+
+    confirmationResult
+        .confirm(code)
+
+        .then(function () {
+
+            message.textContent =
+                "Login successful! Welcome to NV Travelss.";
+
+            openLoggedInApp();
+
+        })
+
+        .catch(function (error) {
+
+            console.error(error);
+
+            message.textContent =
+                "Invalid OTP. Please try again.";
+
+        });
+
+}
+
+
+/* =========================================
+   OPEN APP AFTER OTP
+========================================= */
+
+function openLoggedInApp() {
+
+    const name =
+        localStorage.getItem("nvUserName") || "Traveler";
 
 
     document.getElementById("loginScreen")
@@ -96,6 +271,7 @@ function login() {
             .textContent = name;
 
         openPage("homePage");
+
     }
 
 }
@@ -107,14 +283,16 @@ function login() {
 
 function openPage(pageId) {
 
-    const pages = document.querySelectorAll("#customerApp .page");
+    const pages =
+        document.querySelectorAll("#customerApp .page");
 
     pages.forEach(function (page) {
         page.classList.remove("active-page");
     });
 
 
-    const selectedPage = document.getElementById(pageId);
+    const selectedPage =
+        document.getElementById(pageId);
 
     if (selectedPage) {
         selectedPage.classList.add("active-page");
@@ -128,17 +306,22 @@ function openPage(pageId) {
         top: 0,
         behavior: "smooth"
     });
+
 }
 
 
 function goHome() {
+
     openPage("homePage");
+
 }
 
 
 function updateBottomNavigation(pageId) {
 
-    const navButtons = document.querySelectorAll(".nav-btn");
+    const navButtons =
+        document.querySelectorAll(".nav-btn");
+
 
     navButtons.forEach(function (button) {
         button.classList.remove("active");
@@ -292,6 +475,7 @@ function likeReel(button) {
     const icon =
         button.querySelector("span");
 
+
     if (icon.textContent === "❤️") {
 
         icon.textContent = "💙";
@@ -311,6 +495,7 @@ function commentReel() {
 
     const comment =
         prompt("Write your comment:");
+
 
     if (comment && comment.trim() !== "") {
 
@@ -352,14 +537,17 @@ function saveReel(button) {
     const icon =
         button.querySelector("span");
 
+
     if (icon.textContent === "🔖") {
 
         icon.textContent = "📌";
+
         alert("Reel saved.");
 
     } else {
 
         icon.textContent = "🔖";
+
         alert("Reel removed from saved.");
 
     }
@@ -607,7 +795,6 @@ window.addEventListener("load", function () {
 
     const savedRole =
         localStorage.getItem("nvUserRole");
-
 
     /*
        Login is intentionally shown again
