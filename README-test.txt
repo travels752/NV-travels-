@@ -1,1 +1,395 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NV Travelss</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="app-header">
+    <div class="logo">NV TRAVELSS</div>
+    <div class="online-dot"></div>
+</header>
+
+
+<!-- HOME -->
+<section id="home" class="screen active">
+
+    <div class="welcome-card">
+        <h1>Welcome to NV Travels 👋</h1>
+        <p>Travel • Ride • Hotel • Packages</p>
+    </div>
+
+    <h2 class="section-title">What do you want today?</h2>
+
+    <div class="home-grid">
+
+        <button onclick="openScreen('ride')">
+            <span>🚕</span>
+            <b>Ride</b>
+            <small>Book a Taxi</small>
+        </button>
+
+        <button onclick="openScreen('hotel')">
+            <span>🏨</span>
+            <b>Hotel</b>
+            <small>Book a Hotel</small>
+        </button>
+
+        <button onclick="openScreen('packages')">
+            <span>🎒</span>
+            <b>Packages</b>
+            <small>Travel Packages</small>
+        </button>
+
+        <button onclick="openScreen('social')">
+            <span>▶️</span>
+            <b>Videos</b>
+            <small>NV Social</small>
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- SOCIAL -->
+<section id="social" class="screen">
+
+    <button class="back-button" onclick="openScreen('home')">← Home</button>
+
+    <h1>▶️ NV Travels</h1>
+
+    <div class="video-card">
+        <div class="video-placeholder">▶️</div>
+        <h3>Beautiful Travel Destination</h3>
+        <p>❤️ Like &nbsp;&nbsp; 💬 Comment &nbsp;&nbsp; 🔗 Share</p>
+    </div>
+
+    <div class="video-card">
+        <div class="video-placeholder">▶️</div>
+        <h3>Travel With NV Travels</h3>
+        <p>❤️ Like &nbsp;&nbsp; 💬 Comment &nbsp;&nbsp; 🔗 Share</p>
+    </div>
+
+</section>
+
+
+<!-- RIDE -->
+<section id="ride" class="screen">
+
+    <button class="back-button" onclick="openScreen('home')">
+        ← Home
+    </button>
+
+    <h1>🚕 Book a Ride</h1>
+
+    <div class="form-card">
+
+        <label>📍 Pickup Location</label>
+        <input type="text" placeholder="Enter pickup location">
+
+        <label>📍 Destination</label>
+        <input type="text" placeholder="Enter destination">
+
+        <label>🚘 Select Vehicle</label>
+
+        <select>
+            <option>Select Vehicle</option>
+            <option>Mini</option>
+            <option>Sedan</option>
+            <option>SUV</option>
+            <option>Innova</option>
+            <option>Tempo Traveller</option>
+        </select>
+
+        <button class="main-button">
+            🚕 Find Ride
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- HOTEL -->
+<section id="hotel" class="screen">
+
+    <button class="back-button" onclick="openScreen('home')">
+        ← Home
+    </button>
+
+    <h1>🏨 Book Hotel</h1>
+
+    <div class="form-card">
+
+        <label>📍 Destination</label>
+        <input type="text" placeholder="City / Destination">
+
+        <label>📅 Check-in</label>
+        <input type="date">
+
+        <label>📅 Check-out</label>
+        <input type="date">
+
+        <label>👥 Guests</label>
+
+        <select>
+            <option>1 Guest</option>
+            <option>2 Guests</option>
+            <option>3 Guests</option>
+            <option>4 Guests</option>
+            <option>5+ Guests</option>
+        </select>
+
+        <button class="main-button">
+            🔍 Search Hotels
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- PACKAGES -->
+<section id="packages" class="screen">
+
+    <button class="back-button" onclick="openScreen('home')">
+        ← Home
+    </button>
+
+    <h1>🎒 Travel Packages</h1>
+
+    <div class="form-card">
+
+        <label>📍 Kahan se?</label>
+        <input type="text" placeholder="Starting location">
+
+        <label>📍 Kahan tak?</label>
+        <input type="text" placeholder="Destination">
+
+        <label>📅 Kitne din?</label>
+
+        <select>
+            <option>1 Day</option>
+            <option>2 Days</option>
+            <option>3 Days</option>
+            <option>5 Days</option>
+            <option>7 Days</option>
+            <option>10+ Days</option>
+        </select>
+
+        <label>👥 Passengers</label>
+        <input type="number" placeholder="Number of passengers">
+
+        <button class="main-button">
+            🔍 Search Packages
+        </button>
+
+    </div>
+
+</section>
+
+
+<!-- SEARCH -->
+<section id="search" class="screen">
+
+    <h1>🔍 Search</h1>
+
+    <div class="search-box">
+
+        <input
+            type="text"
+            placeholder="Search rides, hotels, packages..."
+        >
+
+        <button>Search</button>
+
+    </div>
+
+</section>
+
+
+<!-- PROFILE -->
+<section id="profile" class="screen">
+
+    <div class="profile-top">
+
+        <div class="profile-avatar">👤</div>
+
+        <h1>My Profile</h1>
+
+        <p>Welcome to NV Travels</p>
+
+    </div>
+
+    <div class="profile-menu">
+
+        <button>🚕 My Rides</button>
+        <button>🏨 My Hotels</button>
+        <button>🎒 My Packages</button>
+        <button>📜 Booking History</button>
+        <button onclick="openScreen('driver')">
+            👨‍✈️ Driver Dashboard
+        </button>
+        <button>⚙️ Settings</button>
+
+    </div>
+
+</section>
+
+
+<!-- DRIVER DASHBOARD -->
+<section id="driver" class="screen">
+
+    <button class="back-button" onclick="openScreen('profile')">
+        ← Profile
+    </button>
+
+    <h1>👨‍✈️ Driver Dashboard</h1>
+
+    <div class="driver-status-card">
+
+        <div>
+            <small>Driver Status</small>
+            <h2 id="driverStatus">
+                🟢 Online
+            </h2>
+        </div>
+
+        <button
+            class="status-button"
+            onclick="toggleDriverStatus()"
+        >
+            Go Offline
+        </button>
+
+    </div>
+
+
+    <div class="driver-stats">
+
+        <div class="driver-stat">
+            <span>🚕</span>
+            <b id="driverRides">0</b>
+            <small>Rides</small>
+        </div>
+
+        <div class="driver-stat">
+            <span>💰</span>
+            <b id="driverEarnings">₹0</b>
+            <small>Earnings</small>
+        </div>
+
+        <div class="driver-stat">
+            <span>📊</span>
+            <b>15%</b>
+            <small>Commission</small>
+        </div>
+
+    </div>
+
+
+    <h2 class="section-title">
+        🔔 New Ride Requests
+    </h2>
+
+
+    <div id="driverRequests">
+
+        <div class="ride-request-card">
+
+            <div class="request-top">
+                <b>🚕 New Ride Request</b>
+                <span>NEW</span>
+            </div>
+
+            <p>📍 <b>Pickup:</b> Sample Pickup</p>
+
+            <p>📍 <b>Destination:</b> Sample Destination</p>
+
+            <p>🚘 <b>Vehicle:</b> Sedan</p>
+
+            <p>💰 <b>Estimated Fare:</b> ₹500</p>
+
+            <div class="driver-actions">
+
+                <button
+                    class="accept-button"
+                    onclick="acceptRide(this)"
+                >
+                    ✅ Accept
+                </button>
+
+                <button
+                    class="reject-button"
+                    onclick="rejectRide(this)"
+                >
+                    ❌ Reject
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- BOTTOM NAVIGATION -->
+<nav class="bottom-nav">
+
+    <button
+        class="nav-item active-nav"
+        onclick="openScreen('home')"
+    >
+        <span>⌂</span>
+        <small>Home</small>
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="openScreen('social')"
+    >
+        <span>▶</span>
+        <small>Videos</small>
+    </button>
+
+    <button
+        class="nav-item ride-nav"
+        onclick="openScreen('ride')"
+    >
+        <span>🚕</span>
+        <small>Ride</small>
+        <b class="badge">5</b>
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="openScreen('search')"
+    >
+        <span>⌕</span>
+        <small>Search</small>
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="openScreen('profile')"
+    >
+        <span>👤</span>
+        <small>Profile</small>
+        <i class="online-indicator"></i>
+    </button>
+
+</nav>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
