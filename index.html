@@ -3,454 +3,635 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NV Travelss</title>
+    <title>NV TRAVELSS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <!-- ================= LOGIN ================= -->
-<section id="login" class="screen active">
+<section id="loginScreen" class="screen login-screen active-screen">
 
-    <div class="auth-container">
+    <div class="login-box">
+        <div class="brand-logo">NV</div>
 
-        <div class="logo">NV TRAVELSS</div>
+        <h1>NV TRAVELSS</h1>
+        <p class="tagline">Travel • Ride • Hotel • Packages</p>
 
-        <h1>Welcome 👋</h1>
-        <p>Travel • Ride • Hotel • Packages</p>
-
-        <h3>Login as</h3>
-
-        <div class="role-buttons">
-
-            <button onclick="loginAs('customer')">
+        <div class="role-switch">
+            <button class="role-btn active" data-role="customer">
                 👤 Customer
             </button>
 
-            <button onclick="loginAs('driver')">
+            <button class="role-btn" data-role="driver">
                 🚕 Driver
             </button>
 
-            <button onclick="loginAs('hotel')">
-                🏨 Hotel Owner
+            <button class="role-btn" data-role="hotel">
+                🏨 Hotel
             </button>
-
         </div>
 
+        <input
+            id="loginName"
+            type="text"
+            placeholder="Enter your name"
+        >
+
+        <input
+            id="loginPhone"
+            type="tel"
+            placeholder="Mobile number"
+        >
+
+        <button id="loginButton" class="primary-btn">
+            Login
+        </button>
+
+        <p class="login-note">
+            Login to continue with NV Travelss
+        </p>
     </div>
 
 </section>
 
 
-<!-- ================= APP HEADER ================= -->
-<header id="appHeader" class="app-header" style="display:none;">
-    <div class="logo">NV TRAVELSS</div>
-    <div class="online-dot"></div>
-</header>
+<!-- ================= CUSTOMER APP ================= -->
+<section id="customerApp" class="app-screen">
 
+    <header class="top-header">
+        <div>
+            <div class="brand-name">NV TRAVELSS</div>
+            <small>Travel with us</small>
+        </div>
 
-<!-- ================= HOME ================= -->
-<section id="home" class="screen">
-
-    <div class="welcome-card">
-        <h1>Welcome to NV Travels 👋</h1>
-        <p>Travel • Ride • Hotel • Packages</p>
-    </div>
-
-    <h2 class="section-title">What do you want today?</h2>
-
-    <div class="home-grid">
-
-        <button onclick="openScreen('ride')">
-            <span>🚕</span>
-            <b>Ride</b>
-            <small>Book a Taxi</small>
+        <button class="header-icon" onclick="showSearch()">
+            🔍
         </button>
 
-        <button onclick="openScreen('hotel')">
-            <span>🏨</span>
-            <b>Hotel</b>
-            <small>Book a Hotel</small>
+        <button class="header-icon" onclick="showNotifications()">
+            🔔
+        </button>
+    </header>
+
+
+    <!-- HOME -->
+    <main id="homePage" class="page active-page">
+
+        <div class="welcome-area">
+            <p>Welcome 👋</p>
+            <h1 id="welcomeName">Traveler</h1>
+            <span>Where do you want to go today?</span>
+        </div>
+
+
+        <!-- EXACTLY 4 HOME OPTIONS -->
+        <div class="home-grid">
+
+            <button class="home-card ride-card"
+                    onclick="openPage('ridePage')">
+                <div class="card-icon">🚕</div>
+                <strong>Ride</strong>
+                <span>Book a Taxi</span>
+            </button>
+
+
+            <button class="home-card hotel-card"
+                    onclick="openPage('hotelPage')">
+                <div class="card-icon">🏨</div>
+                <strong>Hotel</strong>
+                <span>Book a Hotel</span>
+            </button>
+
+
+            <button class="home-card package-card"
+                    onclick="openPage('packagePage')">
+                <div class="card-icon">🎒</div>
+                <strong>Packages</strong>
+                <span>Explore Trips</span>
+            </button>
+
+
+            <button class="home-card reel-card"
+                    onclick="openPage('reelsPage')">
+                <div class="card-icon">🎬</div>
+                <strong>Reels</strong>
+                <span>Travel Videos</span>
+            </button>
+
+        </div>
+
+
+        <div class="home-banner">
+            <div>
+                <small>NV TRAVELSS</small>
+                <h2>Your journey starts here ✈️</h2>
+                <p>Ride • Hotel • Packages • Reels</p>
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- RIDE PAGE -->
+    <main id="ridePage" class="page">
+
+        <button class="back-btn" onclick="goHome()">← Home</button>
+
+        <div class="page-heading">
+            <h1>🚕 Book a Ride</h1>
+            <p>Enter your pickup and destination</p>
+        </div>
+
+        <div class="form-card">
+
+            <label>📍 Pickup Location</label>
+            <input id="pickupLocation"
+                   type="text"
+                   placeholder="Enter pickup location">
+
+            <label>📍 Destination</label>
+            <input id="destinationLocation"
+                   type="text"
+                   placeholder="Enter destination">
+
+            <label>🚘 Vehicle</label>
+
+            <select id="vehicleType">
+                <option value="">Select vehicle</option>
+                <option>Mini</option>
+                <option>Sedan</option>
+                <option>SUV</option>
+                <option>Innova</option>
+                <option>Tempo Traveller</option>
+            </select>
+
+            <button class="primary-btn"
+                    onclick="requestRide()">
+                🚕 Find Ride
+            </button>
+
+        </div>
+
+        <div id="rideMessage" class="result-box"></div>
+
+    </main>
+
+
+    <!-- HOTEL PAGE -->
+    <main id="hotelPage" class="page">
+
+        <button class="back-btn" onclick="goHome()">← Home</button>
+
+        <div class="page-heading">
+            <h1>🏨 Book Hotel</h1>
+            <p>Find your perfect stay</p>
+        </div>
+
+        <div class="form-card">
+
+            <label>📍 Destination</label>
+            <input type="text"
+                   placeholder="City / Destination">
+
+            <label>📅 Check-in</label>
+            <input type="date">
+
+            <label>📅 Check-out</label>
+            <input type="date">
+
+            <label>👥 Guests</label>
+
+            <select>
+                <option>1 Guest</option>
+                <option>2 Guests</option>
+                <option>3 Guests</option>
+                <option>4 Guests</option>
+                <option>5+ Guests</option>
+            </select>
+
+            <button class="primary-btn"
+                    onclick="hotelSearch()">
+                🔍 Search Hotels
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- PACKAGE PAGE -->
+    <main id="packagePage" class="page">
+
+        <button class="back-btn" onclick="goHome()">← Home</button>
+
+        <div class="page-heading">
+            <h1>🎒 Travel Packages</h1>
+            <p>Choose your destination and days</p>
+        </div>
+
+        <div class="form-card">
+
+            <label>📍 Starting Location</label>
+            <input type="text"
+                   placeholder="Where from?">
+
+            <label>📍 Destination</label>
+            <input type="text"
+                   placeholder="Where to?">
+
+            <label>📅 Number of Days</label>
+
+            <select>
+                <option>1 Day</option>
+                <option>2 Days</option>
+                <option>3 Days</option>
+                <option>5 Days</option>
+                <option>7 Days</option>
+                <option>10+ Days</option>
+            </select>
+
+            <label>👥 Passengers</label>
+
+            <input type="number"
+                   placeholder="Number of passengers">
+
+            <button class="primary-btn"
+                    onclick="packageSearch()">
+                🔍 Find Packages
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- REELS PAGE -->
+    <main id="reelsPage" class="page reels-page">
+
+        <div class="reels-header">
+            <button class="back-btn"
+                    onclick="goHome()">
+                ←
+            </button>
+
+            <h1>Reels</h1>
+
+            <button class="header-icon">➕</button>
+        </div>
+
+
+        <!-- REEL 1 -->
+        <article class="reel">
+
+            <div class="reel-video">
+                <div class="fake-video">
+                    <span>▶</span>
+                    <p>Beautiful Travel Destination</p>
+                </div>
+            </div>
+
+            <div class="reel-actions">
+
+                <button onclick="likeReel(this)">
+                    <span>❤️</span>
+                    <small>Like</small>
+                </button>
+
+                <button onclick="commentReel()">
+                    <span>💬</span>
+                    <small>Comment</small>
+                </button>
+
+                <button onclick="shareReel()">
+                    <span>↗️</span>
+                    <small>Share</small>
+                </button>
+
+                <button onclick="saveReel(this)">
+                    <span>🔖</span>
+                    <small>Save</small>
+                </button>
+
+            </div>
+
+            <div class="reel-info">
+                <strong>@NV_travelss</strong>
+                <p>Travel with NV Travelss ✈️</p>
+                <small>#travel #taxi #india #trip</small>
+            </div>
+
+        </article>
+
+
+        <!-- REEL 2 -->
+        <article class="reel">
+
+            <div class="reel-video second-video">
+                <div class="fake-video">
+                    <span>▶</span>
+                    <p>Mountain Travel</p>
+                </div>
+            </div>
+
+            <div class="reel-actions">
+
+                <button onclick="likeReel(this)">
+                    <span>❤️</span>
+                    <small>Like</small>
+                </button>
+
+                <button onclick="commentReel()">
+                    <span>💬</span>
+                    <small>Comment</small>
+                </button>
+
+                <button onclick="shareReel()">
+                    <span>↗️</span>
+                    <small>Share</small>
+                </button>
+
+                <button onclick="saveReel(this)">
+                    <span>🔖</span>
+                    <small>Save</small>
+                </button>
+
+            </div>
+
+            <div class="reel-info">
+                <strong>@NV_travelss</strong>
+                <p>Explore more with NV Travelss 🏔️</p>
+                <small>#mountains #travel #vacation</small>
+            </div>
+
+        </article>
+
+    </main>
+
+
+    <!-- SEARCH PAGE -->
+    <main id="searchPage" class="page">
+
+        <div class="page-heading">
+            <h1>🔍 Search</h1>
+            <p>Search rides, hotels, packages and reels</p>
+        </div>
+
+        <div class="search-container">
+
+            <input id="searchInput"
+                   type="text"
+                   placeholder="Search...">
+
+            <button onclick="performSearch()">
+                Search
+            </button>
+
+        </div>
+
+        <div id="searchResult" class="result-box"></div>
+
+    </main>
+
+
+    <!-- PROFILE PAGE -->
+    <main id="profilePage" class="page">
+
+        <div class="profile-header">
+
+            <div class="avatar">👤</div>
+
+            <h1 id="profileName">Traveler</h1>
+
+            <p>NV Travelss Member</p>
+
+        </div>
+
+        <div class="profile-menu">
+
+            <button onclick="showMessage('My Rides')">
+                🚕 My Rides
+                <span>›</span>
+            </button>
+
+            <button onclick="showMessage('My Hotels')">
+                🏨 My Hotels
+                <span>›</span>
+            </button>
+
+            <button onclick="showMessage('My Packages')">
+                🎒 My Packages
+                <span>›</span>
+            </button>
+
+            <button onclick="showMessage('Booking History')">
+                📜 Booking History
+                <span>›</span>
+            </button>
+
+            <button onclick="openMessages()">
+                💬 Messages
+                <span>›</span>
+            </button>
+
+            <button onclick="showMessage('Settings')">
+                ⚙️ Settings
+                <span>›</span>
+            </button>
+
+            <button class="logout-btn"
+                    onclick="logout()">
+                🚪 Logout
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+
+        <button class="nav-btn active"
+                onclick="openPage('homePage')">
+            <span>⌂</span>
+            <small>Home</small>
         </button>
 
-        <button onclick="openScreen('packages')">
-            <span>🎒</span>
-            <b>Packages</b>
-            <small>Travel Packages</small>
+        <button class="nav-btn"
+                onclick="openPage('reelsPage')">
+            <span>🎬</span>
+            <small>Reels</small>
         </button>
 
-        <button onclick="openScreen('social')">
-            <span>▶️</span>
-            <b>Videos</b>
-            <small>NV Social</small>
+        <button class="nav-btn post-btn"
+                onclick="createPost()">
+            <span>＋</span>
+            <small>Post</small>
         </button>
 
-    </div>
+        <button class="nav-btn"
+                onclick="openPage('searchPage')">
+            <span>⌕</span>
+            <small>Search</small>
+        </button>
+
+        <button class="nav-btn"
+                onclick="openPage('profilePage')">
+            <span>👤</span>
+            <small>Profile</small>
+        </button>
+
+    </nav>
 
 </section>
 
 
 <!-- ================= DRIVER DASHBOARD ================= -->
-<section id="driver" class="screen">
+<section id="driverApp" class="app-screen">
 
-    <button class="back-button" onclick="logout()">
-        ← Logout
-    </button>
-
-    <h1>🚕 Driver Dashboard</h1>
-    <p>Welcome, Driver</p>
-
-    <div class="driver-status-card">
+    <header class="driver-header">
 
         <div>
-            <small>Driver Status</small>
-            <h2 id="driverStatus">🟢 Online</h2>
+            <small>NV TRAVELSS</small>
+            <h2>Driver Dashboard</h2>
         </div>
 
-        <button
-            class="status-button"
-            onclick="toggleDriverStatus()">
-            Change Status
+        <button onclick="driverLogout()">
+            🚪
         </button>
 
-    </div>
+    </header>
 
 
-    <div class="driver-stats">
+    <main class="driver-content">
 
-        <div class="driver-stat">
-            <span>🚕</span>
-            <b id="driverRides">0</b>
-            <small>Rides</small>
+        <div class="driver-welcome">
+            <p>Welcome Driver 👋</p>
+            <h1 id="driverName">Driver</h1>
         </div>
 
-        <div class="driver-stat">
-            <span>₹</span>
-            <b id="driverEarnings">₹0</b>
-            <small>Earnings</small>
-        </div>
 
-        <div class="driver-stat">
-            <span>⭐</span>
-            <b>5.0</b>
-            <small>Rating</small>
-        </div>
+        <!-- ONLINE BOX -->
+        <div class="online-card">
 
-    </div>
+            <div>
+                <strong>Driver Status</strong>
+                <p id="driverStatusText">Offline</p>
+            </div>
 
-
-    <!-- RIDE REQUEST -->
-
-    <div class="ride-request-card">
-
-        <div class="request-top">
-            <strong>New Ride Request</strong>
-            <span>NEW</span>
-        </div>
-
-        <p>
-            📍 <b>Pickup:</b>
-            Indore City
-        </p>
-
-        <p>
-            📍 <b>Destination:</b>
-            Railway Station
-        </p>
-
-        <p>
-            💰 <b>Fare:</b>
-            ₹500
-        </p>
-
-        <div class="driver-actions">
-
-            <button
-                class="accept-button"
-                onclick="acceptRide()">
-                ✓ Accept Ride
-            </button>
-
-            <button
-                class="reject-button"
-                onclick="rejectRide()">
-                ✕ Reject
+            <button id="onlineButton"
+                    class="status-toggle"
+                    onclick="toggleDriverStatus()">
+                GO ONLINE
             </button>
 
         </div>
 
-    </div>
+
+        <!-- EARNINGS -->
+        <div class="driver-stats">
+
+            <div>
+                <span>💰</span>
+                <strong id="driverEarnings">₹0</strong>
+                <small>Earnings</small>
+            </div>
+
+            <div>
+                <span>🚕</span>
+                <strong id="driverRides">0</strong>
+                <small>Rides</small>
+            </div>
+
+            <div>
+                <span>📊</span>
+                <strong>15%</strong>
+                <small>Commission</small>
+            </div>
+
+        </div>
 
 
-    <!-- DRIVER MENU -->
+        <!-- RIDE REQUEST -->
+        <div class="driver-card">
 
-    <div class="profile-menu">
+            <div class="driver-card-title">
+                <h3>🚕 Ride Requests</h3>
+                <span id="requestBadge">1</span>
+            </div>
 
-        <button>📋 Ride History</button>
+            <div class="ride-request">
 
-        <button>💰 Commission</button>
+                <p><strong>📍 Pickup</strong></p>
+                <span>Customer Location</span>
 
-        <button>🎫 Driver Pass ₹75</button>
+                <p><strong>📍 Destination</strong></p>
+                <span>Destination Location</span>
 
-        <button>💳 Pay Commission</button>
+                <p><strong>💰 Estimated Fare</strong></p>
+                <strong>₹1000</strong>
 
-    </div>
+                <div class="request-buttons">
 
-</section>
+                    <button class="reject-btn"
+                            onclick="rejectRide()">
+                        Reject
+                    </button>
 
+                    <button class="accept-btn"
+                            onclick="acceptRide()">
+                        Accept Ride
+                    </button>
 
-<!-- ================= HOTEL OWNER ================= -->
-<section id="hotelOwner" class="screen">
+                </div>
 
-    <button class="back-button" onclick="logout()">
-        ← Logout
-    </button>
+            </div>
 
-    <h1>🏨 Hotel Owner</h1>
-
-    <div class="profile-menu">
-
-        <button>🏨 My Hotel</button>
-        <button>📅 Bookings</button>
-        <button>💰 Earnings</button>
-        <button>🎫 Hotel Pass ₹1000/month</button>
-
-    </div>
-
-</section>
-
-
-<!-- ================= VIDEOS / SOCIAL ================= -->
-<section id="social" class="screen">
-
-    <button class="back-button" onclick="openScreen('home')">
-        ← Home
-    </button>
-
-    <h1>▶️ NV Travels</h1>
-
-    <div class="video-card">
-        <div class="video-placeholder">▶️</div>
-        <h3>Beautiful Travel Destination</h3>
-        <p>❤️ Like &nbsp;&nbsp; 💬 Comment &nbsp;&nbsp; 🔗 Share</p>
-    </div>
-
-    <div class="video-card">
-        <div class="video-placeholder">▶️</div>
-        <h3>Travel With NV Travels</h3>
-        <p>❤️ Like &nbsp;&nbsp; 💬 Comment &nbsp;&nbsp; 🔗 Share</p>
-    </div>
-
-</section>
+        </div>
 
 
-<!-- ================= RIDE ================= -->
-<section id="ride" class="screen">
+        <!-- DRIVER PASS -->
+        <div class="driver-card">
 
-    <button class="back-button" onclick="openScreen('home')">
-        ← Home
-    </button>
+            <h3>🎫 Driver Pass</h3>
 
-    <h1>🚕 Book a Ride</h1>
+            <div class="pass-info">
+                <strong>₹75 / 24 Hours</strong>
+                <span id="passStatus">Not Active</span>
+            </div>
 
-    <div class="form-card">
+            <button class="primary-btn"
+                    onclick="activatePass()">
+                Take Driver Pass
+            </button>
 
-        <label>📍 Pickup Location</label>
-        <input type="text" placeholder="Enter pickup location">
-
-        <label>📍 Destination</label>
-        <input type="text" placeholder="Enter destination">
-
-        <label>🚘 Select Vehicle</label>
-
-        <select>
-            <option>Select Vehicle</option>
-            <option>Mini</option>
-            <option>Sedan</option>
-            <option>SUV</option>
-            <option>Innova</option>
-            <option>Tempo Traveller</option>
-        </select>
-
-        <button class="main-button">
-            🚕 Find Ride
-        </button>
-
-    </div>
-
-</section>
+        </div>
 
 
-<!-- ================= HOTEL ================= -->
-<section id="hotel" class="screen">
+        <!-- COMMISSION -->
+        <div class="driver-card">
 
-    <button class="back-button" onclick="openScreen('home')">
-        ← Home
-    </button>
+            <h3>💳 Commission</h3>
 
-    <h1>🏨 Book Hotel</h1>
+            <p>
+                Driver commission: <strong>15%</strong>
+            </p>
 
-    <div class="form-card">
+            <p id="commissionText">
+                No pending commission
+            </p>
 
-        <label>📍 Destination</label>
-        <input type="text" placeholder="City / Destination">
+            <button class="primary-btn"
+                    onclick="payCommission()">
+                Pay Commission
+            </button>
 
-        <label>📅 Check-in</label>
-        <input type="date">
+        </div>
 
-        <label>📅 Check-out</label>
-        <input type="date">
-
-        <label>👥 Guests</label>
-
-        <select>
-            <option>1 Guest</option>
-            <option>2 Guests</option>
-            <option>3 Guests</option>
-            <option>4 Guests</option>
-            <option>5+ Guests</option>
-        </select>
-
-        <button class="main-button">
-            🔍 Search Hotels
-        </button>
-
-    </div>
+    </main>
 
 </section>
-
-
-<!-- ================= PACKAGES ================= -->
-<section id="packages" class="screen">
-
-    <button class="back-button" onclick="openScreen('home')">
-        ← Home
-    </button>
-
-    <h1>🎒 Travel Packages</h1>
-
-    <div class="form-card">
-
-        <label>📍 Kahan se?</label>
-        <input type="text" placeholder="Starting location">
-
-        <label>📍 Kahan tak?</label>
-        <input type="text" placeholder="Destination">
-
-        <label>📅 Kitne din?</label>
-
-        <select>
-            <option>1 Day</option>
-            <option>2 Days</option>
-            <option>3 Days</option>
-            <option>5 Days</option>
-            <option>7 Days</option>
-            <option>10+ Days</option>
-        </select>
-
-        <label>👥 Passengers</label>
-        <input type="number" placeholder="Number of passengers">
-
-        <button class="main-button">
-            🔍 Search Packages
-        </button>
-
-    </div>
-
-</section>
-
-
-<!-- ================= SEARCH ================= -->
-<section id="search" class="screen">
-
-    <h1>🔍 Search</h1>
-
-    <div class="search-box">
-        <input
-            type="text"
-            placeholder="Search rides, hotels, packages...">
-
-        <button>Search</button>
-    </div>
-
-</section>
-
-
-<!-- ================= PROFILE ================= -->
-<section id="profile" class="screen">
-
-    <div class="profile-top">
-        <div class="profile-avatar">👤</div>
-        <h1>My Profile</h1>
-        <p>Welcome to NV Travels</p>
-    </div>
-
-    <div class="profile-menu">
-
-        <button>🚕 My Rides</button>
-        <button>🏨 My Hotels</button>
-        <button>🎒 My Packages</button>
-        <button>📜 Booking History</button>
-        <button>⚙️ Settings</button>
-
-    </div>
-
-</section>
-
-
-<!-- ================= BOTTOM NAV ================= -->
-<nav id="bottomNav" class="bottom-nav" style="display:none;">
-
-    <button
-        class="nav-item active-nav"
-        onclick="openScreen('home')">
-
-        <span>⌂</span>
-        <small>Home</small>
-
-    </button>
-
-    <button
-        class="nav-item"
-        onclick="openScreen('social')">
-
-        <span>▶</span>
-        <small>Videos</small>
-
-    </button>
-
-    <button
-        class="nav-item ride-nav"
-        onclick="openScreen('ride')">
-
-        <span>🚕</span>
-        <small>Ride</small>
-
-        <b class="badge">5</b>
-
-    </button>
-
-    <button
-        class="nav-item"
-        onclick="openScreen('search')">
-
-        <span>⌕</span>
-        <small>Search</small>
-
-    </button>
-
-    <button
-        class="nav-item"
-        onclick="openScreen('profile')">
-
-        <span>👤</span>
-        <small>Profile</small>
-
-        <i class="online-indicator"></i>
-
-    </button>
-
-</nav>
 
 
 <script src="script.js"></script>
