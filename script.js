@@ -901,110 +901,140 @@ else if (
 /* =========================================
 DRIVER RIDE LISTENER
 ========================================= */
+/* =========================================
+DRIVER RIDE LISTENER - FIXED
+CUSTOMER → DRIVER
+========================================= */
 
 function startDriverRideListener() {
 
-const db =
-    getDatabase();
+    const db = getDatabase();
 
+    if (!db) {
+        console.error("Firebase database not connected.");
+        return;
+    }
 
-if (!db) {
-    return;
-}
+    // पुराने listener को बंद करो
+    if (rideListener) {
+        rideListener();
+        rideListener = null;
+    }
 
+    console.log("🚕 Starting driver ride listener...");
 
-if (rideListener) {
+    /*
+       IMPORTANT:
+       orderBy("createdAt") हटाया गया है.
+       इससे Firestore composite-index problem नहीं आएगी.
+    */
 
-    rideListener();
-
-    rideListener =
-        null;
-
-}
-
-
-rideListener =
-    db.collection("rides")
-        .where(
-            "status",
-            "==",
-            "searching"
-        )
-        .orderBy(
-            "createdAt",
-            "desc"
-        )
-        .limit(1)
+    rideListener = db.collection("rides")
+        .where("status", "==", "searching")
         .onSnapshot(
 
-            function (snapshot) {
+            function(snapshot) {
 
-                if (
-                    snapshot.empty
-                ) {
+                console.log(
+                    "🚕 Searching rides found:",
+                    snapshot.size
+                );
 
-                    pendingRide =
-                        false;
+                if (snapshot.empty) {
 
-                    currentRide =
-                        null;
+                    pendingRide = false;
+                    currentRide = null;
 
                     showNoRideRequest();
-
                     updateRequestBadge(0);
 
                     return;
-
                 }
 
+                /*
+                   सभी searching rides में से
+                   latest ride JavaScript से चुनेंगे.
+                */
 
-                const doc =
-                    snapshot.docs[0];
+                let rides = [];
 
+                snapshot.forEach(function(doc) {
 
-                currentRide = {
+                    const data = doc.data();
 
-                    id:
-                        doc.id,
+                    rides.push({
+                        id: doc.id,
+                        ...data
+                    });
 
-                    ...doc.data()
+                });
 
-                };
+                // Latest ride पहले
+                rides.sort(function(a, b) {
 
+                    const timeA =
+                        a.createdAt &&
+                        a.createdAt.toMillis
+                            ? a.createdAt.toMillis()
+                            : 0;
 
-                pendingRide =
-                    true;
+                    const timeB =
+                        b.createdAt &&
+                        b.createdAt.toMillis
+                            ? b.createdAt.toMillis()
+                            : 0;
 
+                    return timeB - timeA;
+
+                });
+
+                currentRide = rides[0];
+
+                pendingRide = true;
+
+                console.log(
+                    "🚕 New ride received:",
+                    currentRide
+                );
 
                 showDriverRideRequest(
                     currentRide
                 );
 
-
                 updateRequestBadge(1);
 
             },
 
-            function (error) {
+            function(error) {
 
                 console.error(
-                    "Driver ride listener error:",
+                    "❌ Driver ride listener error:",
                     error
                 );
 
-
-                /*
-                   Firestore may require
-                   an index for this query.
-                */
-
-                fallbackDriverRideListener();
+                showNoRideRequest();
 
             }
         );
-
 }
 
+
+/* =========================================
+OLD FALLBACK FUNCTION
+KEPT SAFE
+========================================= */
+
+function fallbackDriverRideListener() {
+
+    // अब अलग fallback listener की जरूरत नहीं है.
+    // startDriverRideListener() की query ही
+    // index के बिना काम करेगी.
+
+    console.log(
+        "Fallback listener is no longer required."
+    );
+
+}
 /* =========================================
 DRIVER FALLBACK LISTENER
 ========================================= */
