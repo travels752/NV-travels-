@@ -681,9 +681,9 @@ const rideData = {
     vehicle:
         vehicle,
 
-    fare:
-        850,
-
+ fare:
+    getVehicleRate(vehicle),  
+ 
     status:
         "searching",
 
