@@ -16,6 +16,9 @@ let currentRide = null;
 /* Accepted driver ride */
 let activeRideId = null;
 
+/* Prevent double accept */
+let acceptingRide = false;
+
 let confirmationResult = null;
 let recaptchaVerifier = null;
 
@@ -552,6 +555,9 @@ function openLoggedInApp() {
         currentRide =
             null;
 
+        acceptingRide =
+            false;
+
 
         updateDriverStatusUI();
 
@@ -753,7 +759,6 @@ function updateBottomNavigation(pageId) {
 
 /* =========================================
 CUSTOMER REQUEST RIDE
-FIRESTORE FIXED
 ========================================= */
 
 function requestRide() {
@@ -864,11 +869,6 @@ function requestRide() {
         "🚕 Creating ride request...";
 
 
-    /*
-       Firestore document.
-       new Date() use kiya gaya hai.
-    */
-
     const rideData = {
 
         customerName:
@@ -957,12 +957,6 @@ function requestRide() {
         return;
     }
 
-
-    /*
-       15 second timeout.
-       Agar Firebase response nahi deta
-       to clear error show hoga.
-    */
 
     const timeoutPromise =
         new Promise(function (_, reject) {
@@ -1389,11 +1383,6 @@ function startDriverRideListener() {
                     );
 
 
-                    /*
-                       Accepted ride ko overwrite
-                       nahi karna.
-                    */
-
                     if (activeRideId) {
 
                         updateRequestBadge(
@@ -1426,35 +1415,19 @@ function startDriverRideListener() {
                     }
 
 
-                    /*
-                       Latest ride first.
-                    */
-
                     rides.sort(
                         function (a, b) {
 
                             const timeA =
-                                a.createdAt &&
-                                typeof a.createdAt.toMillis ===
-                                "function"
-                                    ? a.createdAt.toMillis()
-                                    : (
-                                        a.createdAt instanceof Date
-                                            ? a.createdAt.getTime()
-                                            : 0
-                                    );
+                                getRideTime(
+                                    a.createdAt
+                                );
 
 
                             const timeB =
-                                b.createdAt &&
-                                typeof b.createdAt.toMillis ===
-                                "function"
-                                    ? b.createdAt.toMillis()
-                                    : (
-                                        b.createdAt instanceof Date
-                                            ? b.createdAt.getTime()
-                                            : 0
-                                    );
+                                getRideTime(
+                                    b.createdAt
+                                );
 
 
                             return timeB - timeA;
@@ -1500,6 +1473,55 @@ function startDriverRideListener() {
 
                 }
             );
+
+}
+
+
+/* =========================================
+RIDE TIME HELPER
+========================================= */
+
+function getRideTime(value) {
+
+    if (!value) {
+        return 0;
+    }
+
+
+    if (
+        typeof value.toMillis ===
+        "function"
+    ) {
+
+        return value.toMillis();
+
+    }
+
+
+    if (
+        value instanceof Date
+    ) {
+
+        return value.getTime();
+
+    }
+
+
+    if (
+        typeof value === "string"
+    ) {
+
+        const time =
+            new Date(value).getTime();
+
+        return isNaN(time)
+            ? 0
+            : time;
+
+    }
+
+
+    return 0;
 
 }
 
@@ -1672,10 +1694,20 @@ function updateRequestBadge(count) {
 
 
 /* =========================================
-ACCEPT LIVE RIDE
+ACCEPT LIVE RIDE - FIXED
 ========================================= */
 
 function acceptLiveRide() {
+
+    if (acceptingRide) {
+
+        console.log(
+            "⚠️ Ride accept already in progress."
+        );
+
+        return;
+    }
+
 
     if (!driverOnline) {
 
@@ -1700,13 +1732,8 @@ function acceptLiveRide() {
     }
 
 
-    const rideToAccept = {
-        ...currentRide
-    };
-
-
     const rideId =
-        rideToAccept.id;
+        currentRide.id;
 
 
     const db =
@@ -1720,6 +1747,34 @@ function acceptLiveRide() {
         );
 
         return;
+    }
+
+
+    acceptingRide =
+        true;
+
+
+    const card =
+        document.getElementById(
+            "liveRideRequest"
+        );
+
+
+    if (card) {
+
+        const buttons =
+            card.querySelectorAll(
+                "button"
+            );
+
+
+        buttons.forEach(function (button) {
+
+            button.disabled =
+                true;
+
+        });
+
     }
 
 
@@ -1740,180 +1795,312 @@ function acceptLiveRide() {
             .doc(rideId);
 
 
-    db.runTransaction(
-        function (transaction) {
+    /*
+       IMPORTANT:
+       Firestore se latest ride read karenge.
+       currentRide ke old/stale status par
+       depend nahi karenge.
+    */
 
-            return transaction.get(
-                rideRef
-            )
+    rideRef.get()
 
-            .then(function (doc) {
+        .then(function (doc) {
 
-                if (!doc.exists) {
+            if (!doc.exists) {
 
-                    throw new Error(
-                        "Ride does not exist."
-                    );
+                throw new Error(
+                    "Ride does not exist."
+                );
 
-                }
-
-
-                const ride =
-                    doc.data();
+            }
 
 
-                if (
-                    ride.status !== "searching"
-                ) {
-
-                    throw new Error(
-                        "This ride has already been accepted or is no longer available."
-                    );
-
-                }
+            const ride =
+                doc.data();
 
 
-                const rejectedBy =
-                    Array.isArray(
-                        ride.rejectedBy
+            console.log(
+                "🚕 LATEST FIRESTORE RIDE:",
+                ride
+            );
+
+
+            console.log(
+                "🚕 LATEST RIDE STATUS:",
+                ride.status
+            );
+
+
+            if (
+                ride.status !==
+                "searching"
+            ) {
+
+                throw new Error(
+                    "Ride is no longer available. Current status: " +
+                    (
+                        ride.status ||
+                        "unknown"
                     )
-                        ? ride.rejectedBy
-                        : [];
+                );
+
+            }
 
 
-                if (
-                    driverPhone &&
-                    rejectedBy.indexOf(
-                        driverPhone
-                    ) !== -1
-                ) {
+            const rejectedBy =
+                Array.isArray(
+                    ride.rejectedBy
+                )
+                    ? ride.rejectedBy
+                    : [];
 
-                    throw new Error(
-                        "You already rejected this ride."
-                    );
+
+            if (
+                driverPhone &&
+                rejectedBy.indexOf(
+                    driverPhone
+                ) !== -1
+            ) {
+
+                throw new Error(
+                    "You already rejected this ride."
+                );
+
+            }
+
+
+            /*
+               Transaction ke andar latest document
+               dobara check hoga.
+            */
+
+            return db.runTransaction(
+                function (transaction) {
+
+                    return transaction
+                        .get(rideRef)
+
+                        .then(function (latestDoc) {
+
+                            if (
+                                !latestDoc.exists
+                            ) {
+
+                                throw new Error(
+                                    "Ride does not exist."
+                                );
+
+                            }
+
+
+                            const latestRide =
+                                latestDoc.data();
+
+
+                            console.log(
+                                "🚕 TRANSACTION STATUS:",
+                                latestRide.status
+                            );
+
+
+                            if (
+                                latestRide.status !==
+                                "searching"
+                            ) {
+
+                                throw new Error(
+                                    "Ride is no longer available. Current status: " +
+                                    (
+                                        latestRide.status ||
+                                        "unknown"
+                                    )
+                                );
+
+                            }
+
+
+                            const latestRejectedBy =
+                                Array.isArray(
+                                    latestRide.rejectedBy
+                                )
+                                    ? latestRide.rejectedBy
+                                    : [];
+
+
+                            if (
+                                driverPhone &&
+                                latestRejectedBy.indexOf(
+                                    driverPhone
+                                ) !== -1
+                            ) {
+
+                                throw new Error(
+                                    "You already rejected this ride."
+                                );
+
+                            }
+
+
+                            transaction.update(
+                                rideRef,
+                                {
+
+                                    status:
+                                        "accepted",
+
+                                    driverName:
+                                        driverName,
+
+                                    driverPhone:
+                                        driverPhone,
+
+                                    acceptedBy:
+                                        driverPhone,
+
+                                    acceptedAt:
+                                        firebase.firestore
+                                            .FieldValue
+                                            .serverTimestamp()
+
+                                }
+                            );
+
+                        });
 
                 }
+            );
+
+        })
+
+        .then(function () {
+
+            console.log(
+                "✅ RIDE ACCEPTED SUCCESSFULLY:",
+                rideId
+            );
 
 
-                transaction.update(
-                    rideRef,
-                    {
+            activeRideId =
+                rideId;
 
-                        status:
-                            "accepted",
 
-                        driverName:
-                            driverName,
+            currentRide = {
 
-                        driverPhone:
-                            driverPhone,
+                ...currentRide,
 
-                        acceptedBy:
-                            driverPhone,
+                id:
+                    rideId,
 
-                        acceptedAt:
-                            firebase.firestore.FieldValue.serverTimestamp()
+                status:
+                    "accepted",
+
+                driverName:
+                    driverName,
+
+                driverPhone:
+                    driverPhone,
+
+                acceptedBy:
+                    driverPhone
+
+            };
+
+
+            driverRides++;
+
+
+            const ridesElement =
+                document.getElementById(
+                    "driverRides"
+                );
+
+
+            const earningsElement =
+                document.getElementById(
+                    "driverEarnings"
+                );
+
+
+            if (ridesElement) {
+
+                ridesElement.textContent =
+                    driverRides;
+
+            }
+
+
+            if (earningsElement) {
+
+                earningsElement.textContent =
+                    "₹" +
+                    driverEarnings;
+
+            }
+
+
+            pendingRide =
+                false;
+
+
+            updateRequestBadge(0);
+
+
+            showAcceptedDriverRide(
+                currentRide
+            );
+
+
+            alert(
+                "🚕 Ride accepted successfully!"
+            );
+
+        })
+
+        .catch(function (error) {
+
+            console.error(
+                "❌ ACCEPT RIDE ERROR:",
+                error
+            );
+
+
+            /*
+               Button dobara enable.
+            */
+
+            if (card) {
+
+                const buttons =
+                    card.querySelectorAll(
+                        "button"
+                    );
+
+
+                buttons.forEach(
+                    function (button) {
+
+                        button.disabled =
+                            false;
 
                     }
                 );
 
-            });
-
-        }
-    )
-
-    .then(function () {
-
-        activeRideId =
-            rideId;
+            }
 
 
-        currentRide = {
-
-            ...rideToAccept,
-
-            id:
-                rideId,
-
-            status:
-                "accepted",
-
-            driverName:
-                driverName,
-
-            driverPhone:
-                driverPhone,
-
-            acceptedBy:
-                driverPhone
-
-        };
-
-
-        driverRides++;
-
-
-        const ridesElement =
-            document.getElementById(
-                "driverRides"
+            alert(
+                "Ride accept nahi hui: " +
+                error.message
             );
 
+        })
 
-        const earningsElement =
-            document.getElementById(
-                "driverEarnings"
-            );
+        .finally(function () {
 
+            acceptingRide =
+                false;
 
-        if (ridesElement) {
-
-            ridesElement.textContent =
-                driverRides;
-
-        }
-
-
-        if (earningsElement) {
-
-            earningsElement.textContent =
-                "₹" +
-                driverEarnings;
-
-        }
-
-
-        pendingRide =
-            false;
-
-
-        updateRequestBadge(0);
-
-
-        showAcceptedDriverRide(
-            currentRide
-        );
-
-
-        alert(
-            "🚕 Ride accepted successfully!"
-        );
-
-    })
-
-    .catch(function (error) {
-
-        console.error(
-            "Accept ride error:",
-            error
-        );
-
-
-        alert(
-            "Ride accept nahi hui: " +
-            error.message
-        );
-
-    });
+        });
 
 }
 
@@ -2273,10 +2460,6 @@ DRIVER ONLINE / OFFLINE
 ========================================= */
 
 function toggleDriverStatus() {
-
-    /*
-       Active ride ke beech offline nahi.
-    */
 
     if (
         driverOnline &&
@@ -2721,6 +2904,9 @@ function logout() {
     activeRideId =
         null;
 
+    acceptingRide =
+        false;
+
 
     const customerApp =
         document.getElementById(
@@ -2790,6 +2976,9 @@ function driverLogout() {
 
     activeRideId =
         null;
+
+    acceptingRide =
+        false;
 
 
     const driverApp =
