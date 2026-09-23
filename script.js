@@ -13,13 +13,13 @@ let driverRides = 0;
 let pendingRide = false;
 let currentRide = null;
 
-/* Accepted driver ride ko alag track karne ke liye */
+/* Accepted driver ride */
 let activeRideId = null;
 
 let confirmationResult = null;
 let recaptchaVerifier = null;
 
-/* Customer aur Driver ke listeners alag */
+/* Customer aur Driver listeners alag */
 let customerRideListener = null;
 let driverRideListener = null;
 
@@ -509,11 +509,6 @@ function openLoggedInApp() {
 
     if (role === "driver") {
 
-        /*
-           Customer listener ko stop karo.
-           Driver ka listener alag hai.
-        */
-
         stopCustomerRideListener();
 
         const driverApp =
@@ -545,11 +540,6 @@ function openLoggedInApp() {
         }
 
 
-        /*
-           Driver automatically online nahi hoga.
-           GO ONLINE press karna hoga.
-        */
-
         driverOnline =
             false;
 
@@ -575,10 +565,6 @@ function openLoggedInApp() {
     ===================================== */
 
     else {
-
-        /*
-           Driver listener ko stop karo.
-        */
 
         stopDriverRideListener();
 
@@ -767,32 +753,22 @@ function updateBottomNavigation(pageId) {
 
 /* =========================================
 CUSTOMER REQUEST RIDE
+FIRESTORE FIXED
 ========================================= */
 
 function requestRide() {
 
     const pickupInput =
-        document.getElementById(
-            "pickupLocation"
-        );
-
+        document.getElementById("pickupLocation");
 
     const destinationInput =
-        document.getElementById(
-            "destinationLocation"
-        );
-
+        document.getElementById("destinationLocation");
 
     const vehicleInput =
-        document.getElementById(
-            "vehicleType"
-        );
-
+        document.getElementById("vehicleType");
 
     const message =
-        document.getElementById(
-            "rideMessage"
-        );
+        document.getElementById("rideMessage");
 
 
     if (
@@ -803,7 +779,7 @@ function requestRide() {
     ) {
 
         console.error(
-            "Ride form elements not found."
+            "❌ Ride form elements not found."
         );
 
         return;
@@ -813,10 +789,8 @@ function requestRide() {
     const pickup =
         pickupInput.value.trim();
 
-
     const destination =
         destinationInput.value.trim();
-
 
     const vehicle =
         vehicleInput.value;
@@ -831,10 +805,8 @@ function requestRide() {
         message.style.display =
             "block";
 
-
         message.textContent =
             "Please fill pickup, destination and vehicle.";
-
 
         return;
     }
@@ -848,7 +820,6 @@ function requestRide() {
 
         message.style.display =
             "block";
-
 
         message.textContent =
             "Please select a valid vehicle.";
@@ -866,10 +837,8 @@ function requestRide() {
         message.style.display =
             "block";
 
-
         message.textContent =
-            "Firebase database is not connected.";
-
+            "❌ Firebase database is not connected.";
 
         return;
     }
@@ -894,6 +863,11 @@ function requestRide() {
     message.innerHTML =
         "🚕 Creating ride request...";
 
+
+    /*
+       Firestore document.
+       new Date() use kiya gaya hai.
+    */
 
     const rideData = {
 
@@ -925,7 +899,7 @@ function requestRide() {
             "searching",
 
         createdAt:
-            firebase.firestore.FieldValue.serverTimestamp(),
+            new Date(),
 
         acceptedBy:
             "",
@@ -942,61 +916,160 @@ function requestRide() {
         completedAt:
             null,
 
-        /*
-           Har driver ke rejection ko
-           alag track kiya jayega.
-        */
-
         rejectedBy:
             []
 
     };
 
 
-    db.collection("rides")
-        .add(rideData)
+    console.log(
+        "🚕 RIDE DATA:",
+        rideData
+    );
 
-        .then(function (docRef) {
 
-            console.log(
-                "🚕 RIDE CREATED:",
-                docRef.id
+    let ridePromise;
+
+
+    try {
+
+        ridePromise =
+            db.collection("rides")
+                .add(rideData);
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "❌ Firestore start error:",
+            error
+        );
+
+
+        message.innerHTML =
+            "❌ Ride request failed.<br>" +
+            escapeRideText(
+                error.message ||
+                "Firebase error"
             );
 
+        return;
+    }
 
-            localStorage.setItem(
-                "nvCurrentRideId",
-                docRef.id
+
+    /*
+       15 second timeout.
+       Agar Firebase response nahi deta
+       to clear error show hoga.
+    */
+
+    const timeoutPromise =
+        new Promise(function (_, reject) {
+
+            setTimeout(
+                function () {
+
+                    reject(
+                        new Error(
+                            "Firebase response nahi de raha. Firestore connection ya Security Rules check karein."
+                        )
+                    );
+
+                },
+                15000
             );
-
-
-            message.innerHTML =
-                "🚕 Ride request created.<br>" +
-                "Searching for nearby drivers...";
-
-
-            startCustomerRideListener();
-
-
-            alert(
-                "🚕 Ride request sent to nearby drivers."
-            );
-
-        })
-
-        .catch(function (error) {
-
-            console.error(
-                "Ride creation error:",
-                error
-            );
-
-
-            message.textContent =
-                "Ride request failed: " +
-                error.message;
 
         });
+
+
+    Promise.race([
+        ridePromise,
+        timeoutPromise
+    ])
+
+    .then(function (docRef) {
+
+        console.log(
+            "🚕 RIDE CREATED SUCCESSFULLY:",
+            docRef.id
+        );
+
+
+        localStorage.setItem(
+            "nvCurrentRideId",
+            docRef.id
+        );
+
+
+        message.style.display =
+            "block";
+
+
+        message.innerHTML =
+            "🚕 Ride request created.<br>" +
+            "Searching for nearby drivers...";
+
+
+        startCustomerRideListener();
+
+
+        alert(
+            "🚕 Ride request sent to nearby drivers."
+        );
+
+    })
+
+    .catch(function (error) {
+
+        console.error(
+            "❌ RIDE CREATION ERROR:",
+            error
+        );
+
+
+        message.style.display =
+            "block";
+
+
+        let errorMessage =
+            error &&
+            error.message
+                ? error.message
+                : "Unknown Firebase error";
+
+
+        if (
+            error &&
+            error.code ===
+                "permission-denied"
+        ) {
+
+            errorMessage =
+                "Firestore permission denied. Firebase Security Rules check karein.";
+
+        }
+
+
+        if (
+            error &&
+            error.code ===
+                "unavailable"
+        ) {
+
+            errorMessage =
+                "Firebase temporarily unavailable. Internet connection check karein.";
+
+        }
+
+
+        message.innerHTML =
+            "❌ Ride request failed.<br>" +
+            escapeRideText(
+                errorMessage
+            );
+
+    });
 
 }
 
@@ -1099,8 +1172,6 @@ function updateCustomerRideStatus(ride) {
     }
 
 
-    /* SEARCHING */
-
     if (
         ride.status === "searching"
     ) {
@@ -1115,8 +1186,6 @@ function updateCustomerRideStatus(ride) {
 
     }
 
-
-    /* ACCEPTED */
 
     else if (
         ride.status === "accepted"
@@ -1171,8 +1240,6 @@ function updateCustomerRideStatus(ride) {
     }
 
 
-    /* REJECTED */
-
     else if (
         ride.status === "rejected"
     ) {
@@ -1187,8 +1254,6 @@ function updateCustomerRideStatus(ride) {
 
     }
 
-
-    /* COMPLETED */
 
     else if (
         ride.status === "completed"
@@ -1254,7 +1319,7 @@ function startDriverRideListener() {
 
 
     console.log(
-        "🚕 Starting driver ride listener..."
+        "🚕 DRIVER LISTENER STARTED"
     );
 
 
@@ -1266,13 +1331,11 @@ function startDriverRideListener() {
 
     driverRideListener =
         db.collection("rides")
-
             .where(
                 "status",
                 "==",
                 "searching"
             )
-
             .onSnapshot(
 
                 function (snapshot) {
@@ -1292,14 +1355,6 @@ function startDriverRideListener() {
                             const data =
                                 doc.data();
 
-
-                            /*
-                               Jis driver ne ride reject ki,
-                               us driver ko ride dobara nahi dikhegi.
-
-                               Baaki drivers ko wahi ride
-                               milti rahegi.
-                            */
 
                             const rejectedBy =
                                 Array.isArray(
@@ -1335,9 +1390,8 @@ function startDriverRideListener() {
 
 
                     /*
-                       Agar driver ke paas already
-                       accepted ride hai, to searching
-                       listener us card ko overwrite nahi karega.
+                       Accepted ride ko overwrite
+                       nahi karna.
                     */
 
                     if (activeRideId) {
@@ -1381,16 +1435,26 @@ function startDriverRideListener() {
 
                             const timeA =
                                 a.createdAt &&
-                                typeof a.createdAt.toMillis === "function"
+                                typeof a.createdAt.toMillis ===
+                                "function"
                                     ? a.createdAt.toMillis()
-                                    : 0;
+                                    : (
+                                        a.createdAt instanceof Date
+                                            ? a.createdAt.getTime()
+                                            : 0
+                                    );
 
 
                             const timeB =
                                 b.createdAt &&
-                                typeof b.createdAt.toMillis === "function"
+                                typeof b.createdAt.toMillis ===
+                                "function"
                                     ? b.createdAt.toMillis()
-                                    : 0;
+                                    : (
+                                        b.createdAt instanceof Date
+                                            ? b.createdAt.getTime()
+                                            : 0
+                                    );
 
 
                             return timeB - timeA;
@@ -1408,7 +1472,7 @@ function startDriverRideListener() {
 
 
                     console.log(
-                        "🚕 New ride received:",
+                        "🚕 NEW RIDE RECEIVED:",
                         currentRide
                     );
 
@@ -1427,7 +1491,7 @@ function startDriverRideListener() {
                 function (error) {
 
                     console.error(
-                        "❌ Driver ride listener error:",
+                        "❌ DRIVER RIDE LISTENER ERROR:",
                         error
                     );
 
@@ -1636,13 +1700,6 @@ function acceptLiveRide() {
     }
 
 
-    /*
-       IMPORTANT:
-       Listener currentRide ko change kar sakta hai.
-       Isliye accept se pehle ride ka complete
-       data local variable mein save kar rahe hain.
-    */
-
     const rideToAccept = {
         ...currentRide
     };
@@ -1724,12 +1781,6 @@ function acceptLiveRide() {
                         : [];
 
 
-                /*
-                   Safety:
-                   Agar current driver ne ye ride
-                   pehle reject ki thi to accept nahi karega.
-                */
-
                 if (
                     driverPhone &&
                     rejectedBy.indexOf(
@@ -1772,10 +1823,6 @@ function acceptLiveRide() {
     )
 
     .then(function () {
-
-        /*
-           Accepted ride ko active mark karo.
-        */
 
         activeRideId =
             rideId;
@@ -1841,11 +1888,6 @@ function acceptLiveRide() {
 
         updateRequestBadge(0);
 
-
-        /*
-           Accepted ride ko directly show karo.
-           Listener ise overwrite nahi karega.
-        */
 
         showAcceptedDriverRide(
             currentRide
@@ -1981,16 +2023,6 @@ function rejectLiveRide() {
         ) || "";
 
 
-    /*
-       IMPORTANT FIX:
-
-       Ride ka status "rejected" nahi karna.
-       Ride searching hi rahegi.
-
-       Sirf current driver ko hide karenge.
-       Doosre drivers ko ride milti rahegi.
-    */
-
     db.collection("rides")
         .doc(rideId)
         .update({
@@ -2115,11 +2147,6 @@ function completeCurrentRide() {
             showNoRideRequest();
 
 
-            /*
-               Driver agar online hai,
-               to searching rides phir se sunega.
-            */
-
             if (driverOnline) {
 
                 startDriverRideListener();
@@ -2193,7 +2220,6 @@ function updateDriverStatusUI() {
             button.textContent =
                 "GO OFFLINE";
 
-
             button.classList.add(
                 "online"
             );
@@ -2205,7 +2231,6 @@ function updateDriverStatusUI() {
 
             statusText.textContent =
                 "Online";
-
 
             statusText.style.color =
                 "#16a34a";
@@ -2221,7 +2246,6 @@ function updateDriverStatusUI() {
             button.textContent =
                 "GO ONLINE";
 
-
             button.classList.remove(
                 "online"
             );
@@ -2233,7 +2257,6 @@ function updateDriverStatusUI() {
 
             statusText.textContent =
                 "Offline";
-
 
             statusText.style.color =
                 "#dc2626";
@@ -2250,6 +2273,23 @@ DRIVER ONLINE / OFFLINE
 ========================================= */
 
 function toggleDriverStatus() {
+
+    /*
+       Active ride ke beech offline nahi.
+    */
+
+    if (
+        driverOnline &&
+        activeRideId
+    ) {
+
+        alert(
+            "Pehle active ride complete karein, phir offline ja sakte hain."
+        );
+
+        return;
+    }
+
 
     driverOnline =
         !driverOnline;
@@ -2276,17 +2316,8 @@ function toggleDriverStatus() {
         );
 
 
-        /*
-           Driver listener stop hoga.
-        */
-
         stopDriverRideListener();
 
-
-        /*
-           Agar active ride nahi hai,
-           to pending request clear karo.
-        */
 
         if (!activeRideId) {
 
@@ -2334,7 +2365,6 @@ function activatePass() {
 
         status.textContent =
             "Active for 24 hours";
-
 
         status.style.color =
             "#16a34a";
@@ -2486,7 +2516,6 @@ function likeReel(button) {
         icon.textContent =
             "💙";
 
-
         button.style.color =
             "#60a5fa";
 
@@ -2496,7 +2525,6 @@ function likeReel(button) {
 
         icon.textContent =
             "❤️";
-
 
         button.style.color =
             "white";
@@ -2684,14 +2712,11 @@ function logout() {
     driverOnline =
         false;
 
-
     pendingRide =
         false;
 
-
     currentRide =
         null;
-
 
     activeRideId =
         null;
@@ -2757,14 +2782,11 @@ function driverLogout() {
     driverOnline =
         false;
 
-
     pendingRide =
         false;
 
-
     currentRide =
         null;
-
 
     activeRideId =
         null;
