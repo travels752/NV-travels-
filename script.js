@@ -1,6 +1,7 @@
 /* =========================================
 NV TRAVELSS - FINAL APP LOGIC
 FIREBASE OTP + CUSTOMER → DRIVER RIDES
+RIDE CONNECTION FIX
 ========================================= */
 
 let selectedRole = "customer";
@@ -12,10 +13,15 @@ let driverRides = 0;
 let pendingRide = false;
 let currentRide = null;
 
+/* Accepted driver ride ko alag track karne ke liye */
+let activeRideId = null;
+
 let confirmationResult = null;
 let recaptchaVerifier = null;
 
-let rideListener = null;
+/* Customer aur Driver ke listeners alag */
+let customerRideListener = null;
+let driverRideListener = null;
 
 
 /* =========================================
@@ -97,7 +103,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const roleButtons =
         document.querySelectorAll(".role-btn");
 
-
     roleButtons.forEach(function (button) {
 
         button.addEventListener("click", function () {
@@ -106,9 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 btn.classList.remove("active");
             });
 
-
             this.classList.add("active");
-
 
             selectedRole =
                 this.dataset.role;
@@ -120,7 +123,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const loginButton =
         document.getElementById("loginButton");
-
 
     const verifyOtpButton =
         document.getElementById("verifyOtpButton");
@@ -157,22 +159,17 @@ function login() {
     const nameInput =
         document.getElementById("loginName");
 
-
     const phoneInput =
         document.getElementById("loginPhone");
-
 
     const otpInput =
         document.getElementById("otpInput");
 
-
     const loginButton =
         document.getElementById("loginButton");
 
-
     const verifyButton =
         document.getElementById("verifyOtpButton");
-
 
     const message =
         document.getElementById("otpMessage");
@@ -188,7 +185,6 @@ function login() {
 
     const name =
         nameInput.value.trim();
-
 
     let phone =
         phoneInput.value.trim();
@@ -362,9 +358,7 @@ function login() {
                 if (recaptchaVerifier) {
 
                     try {
-
                         recaptchaVerifier.clear();
-
                     } catch (e) {}
 
                     recaptchaVerifier =
@@ -409,7 +403,6 @@ function verifyOTP() {
 
     const otpInput =
         document.getElementById("otpInput");
-
 
     const message =
         document.getElementById("otpMessage");
@@ -458,7 +451,6 @@ function verifyOTP() {
             message.textContent =
                 "Login successful! Welcome to NV Travelss.";
 
-
             openLoggedInApp();
 
         })
@@ -469,7 +461,6 @@ function verifyOTP() {
                 "OTP verification error:",
                 error
             );
-
 
             message.textContent =
                 "Invalid OTP. Please try again.";
@@ -518,6 +509,13 @@ function openLoggedInApp() {
 
     if (role === "driver") {
 
+        /*
+           Customer listener ko stop karo.
+           Driver ka listener alag hai.
+        */
+
+        stopCustomerRideListener();
+
         const driverApp =
             document.getElementById(
                 "driverApp"
@@ -548,13 +546,21 @@ function openLoggedInApp() {
 
 
         /*
-           Driver login ke baad
-           automatically ONLINE nahi hoga.
-           Driver ko GO ONLINE press karna hoga.
+           Driver automatically online nahi hoga.
+           GO ONLINE press karna hoga.
         */
 
         driverOnline =
             false;
+
+        activeRideId =
+            null;
+
+        pendingRide =
+            false;
+
+        currentRide =
+            null;
 
 
         updateDriverStatusUI();
@@ -569,6 +575,12 @@ function openLoggedInApp() {
     ===================================== */
 
     else {
+
+        /*
+           Driver listener ko stop karo.
+        */
+
+        stopDriverRideListener();
 
         const customerApp =
             document.getElementById(
@@ -614,7 +626,6 @@ function openLoggedInApp() {
 
 
         openPage("homePage");
-
 
         startCustomerRideListener();
 
@@ -884,12 +895,6 @@ function requestRide() {
         "🚕 Creating ride request...";
 
 
-    /*
-       IMPORTANT:
-       Abhi actual distance available nahi hai.
-       Isliye fare field ko rate per km rakha gaya hai.
-    */
-
     const rideData = {
 
         customerName:
@@ -935,7 +940,15 @@ function requestRide() {
             null,
 
         completedAt:
-            null
+            null,
+
+        /*
+           Har driver ke rejection ko
+           alag track kiya jayega.
+        */
+
+        rejectedBy:
+            []
 
     };
 
@@ -944,6 +957,12 @@ function requestRide() {
         .add(rideData)
 
         .then(function (docRef) {
+
+            console.log(
+                "🚕 RIDE CREATED:",
+                docRef.id
+            );
+
 
             localStorage.setItem(
                 "nvCurrentRideId",
@@ -955,11 +974,6 @@ function requestRide() {
                 "🚕 Ride request created.<br>" +
                 "Searching for nearby drivers...";
 
-
-            /*
-               Customer ko apni new ride
-               ka live status immediately sunna chahiye.
-            */
 
             startCustomerRideListener();
 
@@ -1013,17 +1027,17 @@ function startCustomerRideListener() {
     }
 
 
-    if (rideListener) {
+    if (customerRideListener) {
 
-        rideListener();
+        customerRideListener();
 
-        rideListener =
+        customerRideListener =
             null;
 
     }
 
 
-    rideListener =
+    customerRideListener =
         db.collection("rides")
             .doc(rideId)
             .onSnapshot(
@@ -1039,11 +1053,14 @@ function startCustomerRideListener() {
                         doc.data();
 
 
-                    currentRide =
-                        {
-                            id: doc.id,
-                            ...ride
-                        };
+                    currentRide = {
+
+                        id:
+                            doc.id,
+
+                        ...ride
+
+                    };
 
 
                     updateCustomerRideStatus(
@@ -1196,11 +1213,6 @@ CUSTOMER → DRIVER
 
 function startDriverRideListener() {
 
-    /*
-       Driver OFFLINE hai to listener
-       start nahi hoga.
-    */
-
     if (!driverOnline) {
 
         console.log(
@@ -1225,14 +1237,20 @@ function startDriverRideListener() {
     }
 
 
-    if (rideListener) {
+    if (driverRideListener) {
 
-        rideListener();
+        driverRideListener();
 
-        rideListener =
+        driverRideListener =
             null;
 
     }
+
+
+    const driverPhone =
+        localStorage.getItem(
+            "nvUserPhone"
+        ) || "";
 
 
     console.log(
@@ -1240,7 +1258,13 @@ function startDriverRideListener() {
     );
 
 
-    rideListener =
+    console.log(
+        "🚕 Driver phone:",
+        driverPhone
+    );
+
+
+    driverRideListener =
         db.collection("rides")
 
             .where(
@@ -1259,7 +1283,75 @@ function startDriverRideListener() {
                     );
 
 
-                    if (snapshot.empty) {
+                    let rides = [];
+
+
+                    snapshot.forEach(
+                        function (doc) {
+
+                            const data =
+                                doc.data();
+
+
+                            /*
+                               Jis driver ne ride reject ki,
+                               us driver ko ride dobara nahi dikhegi.
+
+                               Baaki drivers ko wahi ride
+                               milti rahegi.
+                            */
+
+                            const rejectedBy =
+                                Array.isArray(
+                                    data.rejectedBy
+                                )
+                                    ? data.rejectedBy
+                                    : [];
+
+
+                            if (
+                                driverPhone &&
+                                rejectedBy.indexOf(
+                                    driverPhone
+                                ) !== -1
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            rides.push({
+
+                                id:
+                                    doc.id,
+
+                                ...data
+
+                            });
+
+                        }
+                    );
+
+
+                    /*
+                       Agar driver ke paas already
+                       accepted ride hai, to searching
+                       listener us card ko overwrite nahi karega.
+                    */
+
+                    if (activeRideId) {
+
+                        updateRequestBadge(
+                            rides.length
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (rides.length === 0) {
 
                         pendingRide =
                             false;
@@ -1276,30 +1368,8 @@ function startDriverRideListener() {
 
 
                         return;
+
                     }
-
-
-                    let rides = [];
-
-
-                    snapshot.forEach(
-                        function (doc) {
-
-                            const data =
-                                doc.data();
-
-
-                            rides.push({
-
-                                id:
-                                    doc.id,
-
-                                ...data
-
-                            });
-
-                        }
-                    );
 
 
                     /*
@@ -1566,8 +1636,20 @@ function acceptLiveRide() {
     }
 
 
+    /*
+       IMPORTANT:
+       Listener currentRide ko change kar sakta hai.
+       Isliye accept se pehle ride ka complete
+       data local variable mein save kar rahe hain.
+    */
+
+    const rideToAccept = {
+        ...currentRide
+    };
+
+
     const rideId =
-        currentRide.id;
+        rideToAccept.id;
 
 
     const db =
@@ -1600,13 +1682,6 @@ function acceptLiveRide() {
         db.collection("rides")
             .doc(rideId);
 
-
-    /*
-       Transaction:
-       Agar kisi doosre driver ne
-       pehle hi ride accept kar li,
-       to current driver ko accept nahi milega.
-    */
 
     db.runTransaction(
         function (transaction) {
@@ -1641,6 +1716,34 @@ function acceptLiveRide() {
                 }
 
 
+                const rejectedBy =
+                    Array.isArray(
+                        ride.rejectedBy
+                    )
+                        ? ride.rejectedBy
+                        : [];
+
+
+                /*
+                   Safety:
+                   Agar current driver ne ye ride
+                   pehle reject ki thi to accept nahi karega.
+                */
+
+                if (
+                    driverPhone &&
+                    rejectedBy.indexOf(
+                        driverPhone
+                    ) !== -1
+                ) {
+
+                    throw new Error(
+                        "You already rejected this ride."
+                    );
+
+                }
+
+
                 transaction.update(
                     rideRef,
                     {
@@ -1670,15 +1773,37 @@ function acceptLiveRide() {
 
     .then(function () {
 
-        driverRides++;
-
-
         /*
-           IMPORTANT:
-           Current fare abhi actual trip fare nahi hai.
-           Isliye driver earning ko rate se
-           calculate nahi kiya ja raha.
+           Accepted ride ko active mark karo.
         */
+
+        activeRideId =
+            rideId;
+
+
+        currentRide = {
+
+            ...rideToAccept,
+
+            id:
+                rideId,
+
+            status:
+                "accepted",
+
+            driverName:
+                driverName,
+
+            driverPhone:
+                driverPhone,
+
+            acceptedBy:
+                driverPhone
+
+        };
+
+
+        driverRides++;
 
 
         const ridesElement =
@@ -1717,26 +1842,18 @@ function acceptLiveRide() {
         updateRequestBadge(0);
 
 
-        alert(
-            "🚕 Ride accepted successfully!"
-        );
-
-
         /*
-           Firestore listener accepted ride
-           ko searching list se hata dega.
+           Accepted ride ko directly show karo.
+           Listener ise overwrite nahi karega.
         */
 
         showAcceptedDriverRide(
-            {
-                ...currentRide,
-                status:
-                    "accepted",
-                driverName:
-                    driverName,
-                driverPhone:
-                    driverPhone
-            }
+            currentRide
+        );
+
+
+        alert(
+            "🚕 Ride accepted successfully!"
         );
 
     })
@@ -1858,17 +1975,30 @@ function rejectLiveRide() {
         currentRide.id;
 
 
+    const driverPhone =
+        localStorage.getItem(
+            "nvUserPhone"
+        ) || "";
+
+
+    /*
+       IMPORTANT FIX:
+
+       Ride ka status "rejected" nahi karna.
+       Ride searching hi rahegi.
+
+       Sirf current driver ko hide karenge.
+       Doosre drivers ko ride milti rahegi.
+    */
+
     db.collection("rides")
         .doc(rideId)
         .update({
 
-            status:
-                "rejected",
-
             rejectedBy:
-                localStorage.getItem(
-                    "nvUserPhone"
-                ) || "",
+                firebase.firestore.FieldValue.arrayUnion(
+                    driverPhone
+                ),
 
             rejectedAt:
                 firebase.firestore.FieldValue.serverTimestamp()
@@ -1921,10 +2051,15 @@ COMPLETE RIDE
 
 function completeCurrentRide() {
 
-    if (
-        !currentRide ||
-        !currentRide.id
-    ) {
+    const rideId =
+        activeRideId ||
+        (
+            currentRide &&
+            currentRide.id
+        );
+
+
+    if (!rideId) {
 
         alert(
             "No active ride."
@@ -1941,10 +2076,6 @@ function completeCurrentRide() {
     if (!db) {
         return;
     }
-
-
-    const rideId =
-        currentRide.id;
 
 
     db.collection("rides")
@@ -1966,6 +2097,10 @@ function completeCurrentRide() {
             );
 
 
+            activeRideId =
+                null;
+
+
             currentRide =
                 null;
 
@@ -1978,6 +2113,18 @@ function completeCurrentRide() {
 
 
             showNoRideRequest();
+
+
+            /*
+               Driver agar online hai,
+               to searching rides phir se sunega.
+            */
+
+            if (driverOnline) {
+
+                startDriverRideListener();
+
+            }
 
         })
 
@@ -2129,21 +2276,31 @@ function toggleDriverStatus() {
         );
 
 
-        stopRideListener();
+        /*
+           Driver listener stop hoga.
+        */
+
+        stopDriverRideListener();
 
 
-        pendingRide =
-            false;
+        /*
+           Agar active ride nahi hai,
+           to pending request clear karo.
+        */
 
+        if (!activeRideId) {
 
-        currentRide =
-            null;
+            pendingRide =
+                false;
 
+            currentRide =
+                null;
 
-        updateRequestBadge(0);
+            updateRequestBadge(0);
 
+            showNoRideRequest();
 
-        showNoRideRequest();
+        }
 
     }
 
@@ -2520,7 +2677,8 @@ LOGOUT
 
 function logout() {
 
-    stopRideListener();
+    stopCustomerRideListener();
+    stopDriverRideListener();
 
 
     driverOnline =
@@ -2532,6 +2690,10 @@ function logout() {
 
 
     currentRide =
+        null;
+
+
+    activeRideId =
         null;
 
 
@@ -2588,7 +2750,8 @@ DRIVER LOGOUT
 
 function driverLogout() {
 
-    stopRideListener();
+    stopDriverRideListener();
+    stopCustomerRideListener();
 
 
     driverOnline =
@@ -2600,6 +2763,10 @@ function driverLogout() {
 
 
     currentRide =
+        null;
+
+
+    activeRideId =
         null;
 
 
@@ -2636,19 +2803,50 @@ function driverLogout() {
 
 
 /* =========================================
-STOP RIDE LISTENER
+STOP CUSTOMER RIDE LISTENER
+========================================= */
+
+function stopCustomerRideListener() {
+
+    if (customerRideListener) {
+
+        customerRideListener();
+
+        customerRideListener =
+            null;
+
+    }
+
+}
+
+
+/* =========================================
+STOP DRIVER RIDE LISTENER
+========================================= */
+
+function stopDriverRideListener() {
+
+    if (driverRideListener) {
+
+        driverRideListener();
+
+        driverRideListener =
+            null;
+
+    }
+
+}
+
+
+/* =========================================
+STOP ALL RIDE LISTENERS
 ========================================= */
 
 function stopRideListener() {
 
-    if (rideListener) {
+    stopCustomerRideListener();
 
-        rideListener();
-
-        rideListener =
-            null;
-
-    }
+    stopDriverRideListener();
 
 }
 
@@ -2706,11 +2904,6 @@ APP START
 window.addEventListener(
     "load",
     function () {
-
-        /*
-           Login intentionally shown again
-           so testing remains simple.
-        */
 
         console.log(
             "🚕 NV Travelss app loaded successfully."
