@@ -173,18 +173,23 @@
             <input id="destinationLocation"
                    type="text"
                    placeholder="Enter destination">
+<label>🚘 Vehicle</label>
 
-            <label>🚘 Vehicle</label>
-
-            <select id="vehicleType">
-                <option value="">Select vehicle</option>
-                <option>Mini</option>
-                <option>Sedan</option>
-                <option>SUV</option>
-                <option>Innova</option>
-                <option>Tempo Traveller</option>
-            </select>
-
+<select id="vehicleType">
+    <option value="">Select vehicle</option>
+    <option value="bike">🏍️ Bike — ₹10/km</option>
+    <option value="auto">🛺 Auto Rickshaw — ₹15/km</option>
+    <option value="hatchback">🚗 Hatchback — ₹16/km</option>
+    <option value="sedan">🚘 Sedan — ₹18/km</option>
+    <option value="suv">🚙 SUV — ₹22/km</option>
+    <option value="muv">🚐 MUV — ₹24/km</option>
+    <option value="premium">🚙 Premium / Luxury Car — ₹30/km</option>
+    <option value="6-7-seater">🚐 6–7 Seater — ₹25/km</option>
+    <option value="8-12-seater">🚐 8–12 Seater — ₹30/km</option>
+    <option value="tempo-traveller">🚐 Tempo Traveller — ₹35/km</option>
+    <option value="mini-bus">🚌 Mini Bus — ₹45/km</option>
+    <option value="bus">🚌 Bus — ₹60/km</option>
+</select>
             <button class="primary-btn"
                     onclick="requestRide()">
                 🚕 Find Ride
