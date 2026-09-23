@@ -3,6 +3,7 @@ NV TRAVELSS - FINAL APP LOGIC
 FIREBASE OTP + CUSTOMER → DRIVER RIDES
 RIDE CONNECTION + MULTIPLE RIDES + OTP
 GPS + FARE + RIDE STATUS
+PICKUP NAVIGATION + DESTINATION NAVIGATION
 ========================================= */
 
 let selectedRole = "customer";
@@ -1420,12 +1421,6 @@ function updateCustomerRideStatus(ride) {
         ride.status === "rejected"
     ) {
 
-        /*
-           Individual driver reject karne par
-           customer ride rejected nahi hogi.
-           Ye status sirf compatibility ke liye rakha hai.
-        */
-
         message.style.display =
             "block";
 
@@ -1593,13 +1588,6 @@ function startDriverRideListener() {
                     );
 
 
-                    /*
-                       Active ride hone par
-                       pending rides count dikhega,
-                       lekin active ride ke saath
-                       doosri ride accept nahi hogi.
-                    */
-
                     if (activeRideId) {
 
                         updateRequestBadge(
@@ -1631,12 +1619,6 @@ function startDriverRideListener() {
                     pendingRide =
                         true;
 
-
-                    /*
-                       First ride ko currentRide
-                       rakha ja raha hai compatibility
-                       ke liye.
-                    */
 
                     currentRide =
                         rides[0];
@@ -1754,11 +1736,6 @@ function showDriverRideRequests(rides) {
             "liveRideRequests"
         );
 
-
-    /*
-       Agar HTML me container abhi nahi hai,
-       to automatically create karenge.
-    */
 
     if (!container) {
 
@@ -2244,8 +2221,22 @@ function acceptSpecificRide(rideId) {
             updateRequestBadge(0);
 
 
+            /*
+               ACCEPT ke baad pickup navigation
+               open karne ki koshish.
+               Agar browser popup block kare,
+               to screen par Navigate button
+               available rahega.
+            */
+
+            openPickupNavigation(
+                currentRide,
+                true
+            );
+
+
             alert(
-                "🚕 Ride accepted successfully!"
+                "🚕 Ride accepted successfully! Pickup ke liye Google Maps open kiya ja raha hai."
             );
 
         }
@@ -2322,6 +2313,192 @@ function acceptLiveRide() {
     alert(
         "No ride request available."
     );
+
+}
+
+
+/* =========================================
+GOOGLE MAPS - PICKUP NAVIGATION
+========================================= */
+
+function openPickupNavigation(
+    ride,
+    autoOpen
+) {
+
+    if (
+        !ride ||
+        !ride.pickup
+    ) {
+
+        alert(
+            "Customer pickup location available nahi hai."
+        );
+
+        return;
+    }
+
+
+    const pickup =
+        String(
+            ride.pickup
+        ).trim();
+
+
+    if (!pickup) {
+
+        alert(
+            "Customer pickup location available nahi hai."
+        );
+
+        return;
+    }
+
+
+    const mapsUrl =
+        "https://www.google.com/maps/dir/?api=1&destination=" +
+        encodeURIComponent(
+            pickup
+        ) +
+        "&travelmode=driving";
+
+
+    console.log(
+        "📍 PICKUP NAVIGATION:",
+        mapsUrl
+    );
+
+
+    if (autoOpen) {
+
+        try {
+
+            const opened =
+                window.open(
+                    mapsUrl,
+                    "_blank"
+                );
+
+
+            /*
+               Kuch mobile browsers popup block
+               kar sakte hain. Button phir bhi
+               screen par available rahega.
+            */
+
+            if (!opened) {
+
+                console.log(
+                    "Google Maps popup blocked. Use Navigate button."
+                );
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Pickup Maps open error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    return mapsUrl;
+
+}
+
+
+/* =========================================
+GOOGLE MAPS - DESTINATION NAVIGATION
+========================================= */
+
+function openDestinationNavigation(
+    ride,
+    autoOpen
+) {
+
+    if (
+        !ride ||
+        !ride.destination
+    ) {
+
+        alert(
+            "Customer destination available nahi hai."
+        );
+
+        return;
+    }
+
+
+    const destination =
+        String(
+            ride.destination
+        ).trim();
+
+
+    if (!destination) {
+
+        alert(
+            "Customer destination available nahi hai."
+        );
+
+        return;
+    }
+
+
+    const mapsUrl =
+        "https://www.google.com/maps/dir/?api=1&destination=" +
+        encodeURIComponent(
+            destination
+        ) +
+        "&travelmode=driving";
+
+
+    console.log(
+        "📍 DESTINATION NAVIGATION:",
+        mapsUrl
+    );
+
+
+    if (autoOpen) {
+
+        try {
+
+            const opened =
+                window.open(
+                    mapsUrl,
+                    "_blank"
+                );
+
+
+            if (!opened) {
+
+                console.log(
+                    "Google Maps popup blocked. Use Navigate button."
+                );
+
+            }
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Destination Maps open error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    return mapsUrl;
 
 }
 
@@ -2421,12 +2598,15 @@ function showAcceptedDriverRide(ride) {
         ) +
         "/km</p>" +
 
-        "<p><b>Status:</b> " +
-        "Driver Coming</p>" +
+        "<p><b>Status:</b> 🚗 Driver is going to customer</p>" +
 
-        "<button onclick=\"driverComingToCustomer()\">" +
-        "🚗 DRIVER COMING / REACHED CUSTOMER" +
-        "</button>";
+        "<button onclick=\"openPickupNavigation(currentRide, true)\" " +
+        "style=\"display:block;width:100%;padding:13px 18px;margin:10px 0;\">" +
+        "🗺️ NAVIGATE TO CUSTOMER</button>" +
+
+        "<button onclick=\"driverComingToCustomer()\" " +
+        "style=\"display:block;width:100%;padding:13px 18px;\">" +
+        "📍 I REACHED CUSTOMER</button>";
 
 }
 
@@ -2462,23 +2642,89 @@ function driverComingToCustomer() {
 
     db.collection("rides")
         .doc(rideId)
-        .update({
-
-            status:
-                "driverComing",
-
-            driverComingAt:
-                firebase.firestore.FieldValue
-                    .serverTimestamp()
-
-        })
+        .get()
 
         .then(
-            function () {
+            function (doc) {
+
+                if (!doc.exists) {
+
+                    throw new Error(
+                        "Ride does not exist."
+                    );
+
+                }
+
+
+                const ride =
+                    doc.data();
+
+
+                if (
+                    ride.status !==
+                    "accepted"
+                ) {
+
+                    if (
+                        ride.status ===
+                        "driverComing"
+                    ) {
+
+                        return ride;
+
+                    }
+
+                    throw new Error(
+                        "Ride is not in accepted status."
+                    );
+
+                }
+
+
+                return db.collection("rides")
+                    .doc(rideId)
+                    .update({
+
+                        status:
+                            "driverComing",
+
+                        driverComingAt:
+                            firebase.firestore.FieldValue
+                                .serverTimestamp()
+
+                    })
+
+                    .then(
+                        function () {
+
+                            return {
+                                ...ride,
+
+                                id:
+                                    rideId,
+
+                                status:
+                                    "driverComing"
+
+                            };
+
+                        }
+                    );
+
+            }
+        )
+
+        .then(
+            function (ride) {
 
                 currentRide = {
 
                     ...currentRide,
+
+                    ...ride,
+
+                    id:
+                        rideId,
 
                     status:
                         "driverComing"
@@ -2586,7 +2832,8 @@ function showOtpVerificationForDriver(ride) {
         "placeholder=\"Enter 4 digit OTP\" " +
         "style=\"padding:12px;width:100%;box-sizing:border-box;margin:10px 0;\">" +
 
-        "<button onclick=\"verifyRideOtpAndStart()\">" +
+        "<button onclick=\"verifyRideOtpAndStart()\" " +
+        "style=\"display:block;width:100%;padding:13px 18px;\">" +
         "🔐 VERIFY OTP & START RIDE" +
         "</button>";
 
@@ -2758,6 +3005,20 @@ function verifyRideOtpAndStart() {
                     currentRide
                 );
 
+
+                /*
+                   Ride START होते ही destination
+                   navigation open karne ki koshish.
+                   Agar browser popup block kare,
+                   Navigate to Destination button
+                   screen par available rahega.
+                */
+
+                openDestinationNavigation(
+                    currentRide,
+                    true
+                );
+
             }
         )
 
@@ -2831,7 +3092,17 @@ function showStartedDriverRide(ride) {
 
         "<p>💰 Final fare ride complete hone par calculate hoga.</p>" +
 
-        "<button onclick=\"completeCurrentRide()\">" +
+        "<button onclick=\"openDestinationNavigation(currentRide, true)\" " +
+        "style=\"display:block;width:100%;padding:13px 18px;margin:10px 0;\">" +
+        "🗺️ NAVIGATE TO DESTINATION</button>" +
+
+        "<p style=\"font-size:13px;\">" +
+        "Customer agar beech mein utarna chahe ya destination se aage jaana chahe, " +
+        "customer ke utarne par ride complete kar sakte hain." +
+        "</p>" +
+
+        "<button onclick=\"completeCurrentRide()\" " +
+        "style=\"display:block;width:100%;padding:13px 18px;\">" +
         "✅ COMPLETE RIDE" +
         "</button>";
 
@@ -2934,6 +3205,7 @@ function rejectSpecificRide(rideId) {
                 );
 
             }
+
         );
 
 }
@@ -3188,11 +3460,6 @@ function handleCustomerGpsPosition(
         );
 
 
-    /*
-       Very inaccurate GPS point ko
-       distance calculation me use nahi karenge.
-    */
-
     if (
         accuracy > 100
     ) {
@@ -3219,12 +3486,6 @@ function handleCustomerGpsPosition(
 
             );
 
-
-        /*
-           GPS jump filter.
-           Ek single update me 1 km se zyada
-           jump ko ignore karenge.
-        */
 
         if (
             distance >= 0 &&
@@ -3253,10 +3514,6 @@ function handleCustomerGpsPosition(
     const now =
         Date.now();
 
-
-    /*
-       Firestore ko har ~5 seconds me update.
-    */
 
     if (
         now -
@@ -3336,16 +3593,6 @@ function updateRideGpsInFirestore(
                         0
                     );
 
-
-                /*
-                   Abhi pickup/destination text hai,
-                   isliye exact planned route distance
-                   available nahi hai.
-
-                   GPS actual travelled distance
-                   ke basis par live fare calculate
-                   hoga.
-                */
 
                 const minimumFare =
                     rate;
@@ -3490,6 +3737,15 @@ function completeCurrentRide() {
                 const ride =
                     doc.data();
 
+
+                /*
+                   IMPORTANT:
+                   Ride STARTED hone ke baad
+                   customer kisi bhi location par
+                   ride complete karwa sakta hai.
+                   Destination par pahunchna mandatory
+                   nahi hai.
+                */
 
                 if (
                     ride.status !==
