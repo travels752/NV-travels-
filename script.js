@@ -1201,8 +1201,7 @@ card.innerHTML =
     "</p>" +
 
     "<p><b>Vehicle:</b> " +
-    escapeRideText(
-        ride.vehicle
+    escapeRideText(getVehicleName(ride.vehicle))
     ) +
     "</p>" +
 
