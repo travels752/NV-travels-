@@ -13,24 +13,37 @@
 <section id="loginScreen" class="screen login-screen active-screen">
 
     <div class="login-box">
+
         <div class="brand-logo">NV</div>
 
         <h1>NV TRAVELSS</h1>
-        <p class="tagline">Travel • Ride • Hotel • Packages</p>
+
+        <p class="tagline">
+            Travel • Ride • Hotel • Packages
+        </p>
 
         <div class="role-switch">
-            <button class="role-btn active" data-role="customer">
+
+            <button
+                class="role-btn active"
+                data-role="customer">
                 👤 Customer
             </button>
 
-            <button class="role-btn" data-role="driver">
+            <button
+                class="role-btn"
+                data-role="driver">
                 🚕 Driver
             </button>
 
-            <button class="role-btn" data-role="hotel">
+            <button
+                class="role-btn"
+                data-role="hotel">
                 🏨 Hotel
             </button>
+
         </div>
+
 
         <input
             id="loginName"
@@ -38,38 +51,53 @@
             placeholder="Enter your name"
         >
 
+
         <input
             id="loginPhone"
             type="tel"
             placeholder="Mobile number"
         >
-<input
-    id="otpInput"
-    type="tel"
-    inputmode="numeric"
-    maxlength="6"
-    placeholder="Enter OTP"
-    style="display:none;"
->
 
-<div id="recaptcha-container"></div>
 
-<button
-    id="verifyOtpButton"
-    class="primary-btn"
-    style="display:none;"
->
-    Verify OTP
-</button>
+        <input
+            id="otpInput"
+            type="tel"
+            inputmode="numeric"
+            maxlength="6"
+            placeholder="Enter OTP"
+            style="display:none;"
+        >
 
-<p id="otpMessage" class="login-note"></p>
-        <button id="loginButton" class="primary-btn">
+
+        <div id="recaptcha-container"></div>
+
+
+        <button
+            id="verifyOtpButton"
+            class="primary-btn"
+            style="display:none;"
+        >
+            Verify OTP
+        </button>
+
+
+        <p
+            id="otpMessage"
+            class="login-note">
+        </p>
+
+
+        <button
+            id="loginButton"
+            class="primary-btn">
             Login
         </button>
+
 
         <p class="login-note">
             Login to continue with NV Travelss
         </p>
+
     </div>
 
 </section>
@@ -78,165 +106,395 @@
 <!-- ================= CUSTOMER APP ================= -->
 <section id="customerApp" class="app-screen">
 
+
+    <!-- CUSTOMER HEADER -->
     <header class="top-header">
+
         <div>
-            <div class="brand-name">NV TRAVELSS</div>
-            <small>Travel with us</small>
+
+            <div class="brand-name">
+                NV TRAVELSS
+            </div>
+
+            <small>
+                Travel with us
+            </small>
+
         </div>
 
-        <button class="header-icon" onclick="showSearch()">
+
+        <button
+            class="header-icon"
+            onclick="showSearch()">
             🔍
         </button>
 
-        <button class="header-icon" onclick="showNotifications()">
+
+        <button
+            class="header-icon"
+            onclick="showNotifications()">
             🔔
         </button>
+
     </header>
 
 
-    <!-- HOME -->
-    <main id="homePage" class="page active-page">
+    <!-- ================= HOME ================= -->
+    <main
+        id="homePage"
+        class="page active-page">
+
 
         <div class="welcome-area">
-            <p>Welcome 👋</p>
-            <h1 id="welcomeName">Traveler</h1>
-            <span>Where do you want to go today?</span>
+
+            <p>
+                Welcome 👋
+            </p>
+
+            <h1 id="welcomeName">
+                Traveler
+            </h1>
+
+            <span>
+                Where do you want to go today?
+            </span>
+
         </div>
 
 
         <!-- EXACTLY 4 HOME OPTIONS -->
         <div class="home-grid">
 
-            <button class="home-card ride-card"
-                    onclick="openPage('ridePage')">
-                <div class="card-icon">🚕</div>
-                <strong>Ride</strong>
-                <span>Book a Taxi</span>
+
+            <!-- RIDE -->
+            <button
+                class="home-card ride-card"
+                onclick="openPage('ridePage')">
+
+                <div class="card-icon">
+                    🚕
+                </div>
+
+                <strong>
+                    Ride
+                </strong>
+
+                <span>
+                    Book a Taxi
+                </span>
+
             </button>
 
 
-            <button class="home-card hotel-card"
-                    onclick="openPage('hotelPage')">
-                <div class="card-icon">🏨</div>
-                <strong>Hotel</strong>
-                <span>Book a Hotel</span>
+            <!-- HOTEL -->
+            <button
+                class="home-card hotel-card"
+                onclick="openPage('hotelPage')">
+
+                <div class="card-icon">
+                    🏨
+                </div>
+
+                <strong>
+                    Hotel
+                </strong>
+
+                <span>
+                    Book a Hotel
+                </span>
+
             </button>
 
 
-            <button class="home-card package-card"
-                    onclick="openPage('packagePage')">
-                <div class="card-icon">🎒</div>
-                <strong>Packages</strong>
-                <span>Explore Trips</span>
+            <!-- PACKAGES -->
+            <button
+                class="home-card package-card"
+                onclick="openPage('packagePage')">
+
+                <div class="card-icon">
+                    🎒
+                </div>
+
+                <strong>
+                    Packages
+                </strong>
+
+                <span>
+                    Explore Trips
+                </span>
+
             </button>
 
 
-            <button class="home-card reel-card"
-                    onclick="openPage('reelsPage')">
-                <div class="card-icon">🎬</div>
-                <strong>Reels</strong>
-                <span>Travel Videos</span>
+            <!-- REELS -->
+            <button
+                class="home-card reel-card"
+                onclick="openPage('reelsPage')">
+
+                <div class="card-icon">
+                    🎬
+                </div>
+
+                <strong>
+                    Reels
+                </strong>
+
+                <span>
+                    Travel Videos
+                </span>
+
             </button>
 
         </div>
 
 
+        <!-- HOME BANNER -->
         <div class="home-banner">
+
             <div>
-                <small>NV TRAVELSS</small>
-                <h2>Your journey starts here ✈️</h2>
-                <p>Ride • Hotel • Packages • Reels</p>
+
+                <small>
+                    NV TRAVELSS
+                </small>
+
+                <h2>
+                    Your journey starts here ✈️
+                </h2>
+
+                <p>
+                    Ride • Hotel • Packages • Reels
+                </p>
+
             </div>
+
         </div>
 
     </main>
 
 
-    <!-- RIDE PAGE -->
-    <main id="ridePage" class="page">
+    <!-- ================= RIDE PAGE ================= -->
+    <main
+        id="ridePage"
+        class="page">
 
-        <button class="back-btn" onclick="goHome()">← Home</button>
+
+        <button
+            class="back-btn"
+            onclick="goHome()">
+            ← Home
+        </button>
+
 
         <div class="page-heading">
-            <h1>🚕 Book a Ride</h1>
-            <p>Enter your pickup and destination</p>
+
+            <h1>
+                🚕 Book a Ride
+            </h1>
+
+            <p>
+                Enter your pickup and destination
+            </p>
+
         </div>
+
 
         <div class="form-card">
 
-            <label>📍 Pickup Location</label>
-            <input id="pickupLocation"
-                   type="text"
-                   placeholder="Enter pickup location">
 
-            <label>📍 Destination</label>
-            <input id="destinationLocation"
-                   type="text"
-                   placeholder="Enter destination">
-<label>🚘 Vehicle</label>
+            <label>
+                📍 Pickup Location
+            </label>
 
-<select id="vehicleType">
-    <option value="">Select vehicle</option>
-    <option value="bike">🏍️ Bike — ₹10/km</option>
-    <option value="auto">🛺 Auto Rickshaw — ₹15/km</option>
-    <option value="hatchback">🚗 Hatchback — ₹16/km</option>
-    <option value="sedan">🚘 Sedan — ₹18/km</option>
-    <option value="suv">🚙 SUV — ₹22/km</option>
-    <option value="muv">🚐 MUV — ₹24/km</option>
-    <option value="premium">🚙 Premium / Luxury Car — ₹30/km</option>
-    <option value="6-7-seater">🚐 6–7 Seater — ₹25/km</option>
-    <option value="8-12-seater">🚐 8–12 Seater — ₹30/km</option>
-    <option value="tempo-traveller">🚐 Tempo Traveller — ₹35/km</option>
-    <option value="mini-bus">🚌 Mini Bus — ₹45/km</option>
-    <option value="bus">🚌 Bus — ₹60/km</option>
-</select>
-            <button class="primary-btn"
-                    onclick="requestRide()">
+
+            <input
+                id="pickupLocation"
+                type="text"
+                placeholder="Enter pickup location"
+            >
+
+
+            <label>
+                📍 Destination
+            </label>
+
+
+            <input
+                id="destinationLocation"
+                type="text"
+                placeholder="Enter destination"
+            >
+
+
+            <label>
+                🚘 Vehicle
+            </label>
+
+
+            <select id="vehicleType">
+
+                <option value="">
+                    Select vehicle
+                </option>
+
+                <option value="bike">
+                    🏍️ Bike — ₹10/km
+                </option>
+
+                <option value="auto">
+                    🛺 Auto Rickshaw — ₹15/km
+                </option>
+
+                <option value="hatchback">
+                    🚗 Hatchback — ₹16/km
+                </option>
+
+                <option value="sedan">
+                    🚘 Sedan — ₹18/km
+                </option>
+
+                <option value="suv">
+                    🚙 SUV — ₹22/km
+                </option>
+
+                <option value="muv">
+                    🚐 MUV — ₹24/km
+                </option>
+
+                <option value="premium">
+                    🚙 Premium / Luxury Car — ₹30/km
+                </option>
+
+                <option value="6-7-seater">
+                    🚐 6–7 Seater — ₹25/km
+                </option>
+
+                <option value="8-12-seater">
+                    🚐 8–12 Seater — ₹30/km
+                </option>
+
+                <option value="tempo-traveller">
+                    🚐 Tempo Traveller — ₹35/km
+                </option>
+
+                <option value="mini-bus">
+                    🚌 Mini Bus — ₹45/km
+                </option>
+
+                <option value="bus">
+                    🚌 Bus — ₹60/km
+                </option>
+
+            </select>
+
+
+            <button
+                class="primary-btn"
+                onclick="requestRide()">
+
                 🚕 Find Ride
+
             </button>
 
         </div>
 
-        <div id="rideMessage" class="result-box"></div>
+
+        <div
+            id="rideMessage"
+            class="result-box">
+        </div>
 
     </main>
 
 
-    <!-- HOTEL PAGE -->
-    <main id="hotelPage" class="page">
+    <!-- ================= HOTEL PAGE ================= -->
+    <main
+        id="hotelPage"
+        class="page">
 
-        <button class="back-btn" onclick="goHome()">← Home</button>
+
+        <button
+            class="back-btn"
+            onclick="goHome()">
+            ← Home
+        </button>
+
 
         <div class="page-heading">
-            <h1>🏨 Book Hotel</h1>
-            <p>Find your perfect stay</p>
+
+            <h1>
+                🏨 Book Hotel
+            </h1>
+
+            <p>
+                Find your perfect stay
+            </p>
+
         </div>
+
 
         <div class="form-card">
 
-            <label>📍 Destination</label>
-            <input type="text"
-                   placeholder="City / Destination">
 
-            <label>📅 Check-in</label>
+            <label>
+                📍 Destination
+            </label>
+
+            <input
+                type="text"
+                placeholder="City / Destination"
+            >
+
+
+            <label>
+                📅 Check-in
+            </label>
+
             <input type="date">
 
-            <label>📅 Check-out</label>
+
+            <label>
+                📅 Check-out
+            </label>
+
             <input type="date">
 
-            <label>👥 Guests</label>
+
+            <label>
+                👥 Guests
+            </label>
+
 
             <select>
-                <option>1 Guest</option>
-                <option>2 Guests</option>
-                <option>3 Guests</option>
-                <option>4 Guests</option>
-                <option>5+ Guests</option>
+
+                <option>
+                    1 Guest
+                </option>
+
+                <option>
+                    2 Guests
+                </option>
+
+                <option>
+                    3 Guests
+                </option>
+
+                <option>
+                    4 Guests
+                </option>
+
+                <option>
+                    5+ Guests
+                </option>
+
             </select>
 
-            <button class="primary-btn"
-                    onclick="hotelSearch()">
+
+            <button
+                class="primary-btn"
+                onclick="hotelSearch()">
+
                 🔍 Search Hotels
+
             </button>
 
         </div>
@@ -244,45 +502,106 @@
     </main>
 
 
-    <!-- PACKAGE PAGE -->
-    <main id="packagePage" class="page">
+    <!-- ================= PACKAGE PAGE ================= -->
+    <main
+        id="packagePage"
+        class="page">
 
-        <button class="back-btn" onclick="goHome()">← Home</button>
+
+        <button
+            class="back-btn"
+            onclick="goHome()">
+            ← Home
+        </button>
+
 
         <div class="page-heading">
-            <h1>🎒 Travel Packages</h1>
-            <p>Choose your destination and days</p>
+
+            <h1>
+                🎒 Travel Packages
+            </h1>
+
+            <p>
+                Choose your destination and days
+            </p>
+
         </div>
+
 
         <div class="form-card">
 
-            <label>📍 Starting Location</label>
-            <input type="text"
-                   placeholder="Where from?">
 
-            <label>📍 Destination</label>
-            <input type="text"
-                   placeholder="Where to?">
+            <label>
+                📍 Starting Location
+            </label>
 
-            <label>📅 Number of Days</label>
+            <input
+                type="text"
+                placeholder="Where from?"
+            >
+
+
+            <label>
+                📍 Destination
+            </label>
+
+            <input
+                type="text"
+                placeholder="Where to?"
+            >
+
+
+            <label>
+                📅 Number of Days
+            </label>
+
 
             <select>
-                <option>1 Day</option>
-                <option>2 Days</option>
-                <option>3 Days</option>
-                <option>5 Days</option>
-                <option>7 Days</option>
-                <option>10+ Days</option>
+
+                <option>
+                    1 Day
+                </option>
+
+                <option>
+                    2 Days
+                </option>
+
+                <option>
+                    3 Days
+                </option>
+
+                <option>
+                    5 Days
+                </option>
+
+                <option>
+                    7 Days
+                </option>
+
+                <option>
+                    10+ Days
+                </option>
+
             </select>
 
-            <label>👥 Passengers</label>
 
-            <input type="number"
-                   placeholder="Number of passengers">
+            <label>
+                👥 Passengers
+            </label>
 
-            <button class="primary-btn"
-                    onclick="packageSearch()">
+
+            <input
+                type="number"
+                placeholder="Number of passengers"
+            >
+
+
+            <button
+                class="primary-btn"
+                onclick="packageSearch()">
+
                 🔍 Find Packages
+
             </button>
 
         </div>
@@ -290,59 +609,130 @@
     </main>
 
 
-    <!-- REELS PAGE -->
-    <main id="reelsPage" class="page reels-page">
+    <!-- ================= REELS PAGE ================= -->
+    <main
+        id="reelsPage"
+        class="page reels-page">
+
 
         <div class="reels-header">
-            <button class="back-btn"
-                    onclick="goHome()">
+
+
+            <button
+                class="back-btn"
+                onclick="goHome()">
                 ←
             </button>
 
-            <h1>Reels</h1>
 
-            <button class="header-icon">➕</button>
+            <h1>
+                Reels
+            </h1>
+
+
+            <button class="header-icon">
+                ➕
+            </button>
+
         </div>
 
 
         <!-- REEL 1 -->
         <article class="reel">
 
+
             <div class="reel-video">
+
                 <div class="fake-video">
-                    <span>▶</span>
-                    <p>Beautiful Travel Destination</p>
+
+                    <span>
+                        ▶
+                    </span>
+
+                    <p>
+                        Beautiful Travel Destination
+                    </p>
+
                 </div>
+
             </div>
+
 
             <div class="reel-actions">
 
-                <button onclick="likeReel(this)">
-                    <span>❤️</span>
-                    <small>Like</small>
+
+                <button
+                    onclick="likeReel(this)">
+
+                    <span>
+                        ❤️
+                    </span>
+
+                    <small>
+                        Like
+                    </small>
+
                 </button>
 
-                <button onclick="commentReel()">
-                    <span>💬</span>
-                    <small>Comment</small>
+
+                <button
+                    onclick="commentReel()">
+
+                    <span>
+                        💬
+                    </span>
+
+                    <small>
+                        Comment
+                    </small>
+
                 </button>
 
-                <button onclick="shareReel()">
-                    <span>↗️</span>
-                    <small>Share</small>
+
+                <button
+                    onclick="shareReel()">
+
+                    <span>
+                        ↗️
+                    </span>
+
+                    <small>
+                        Share
+                    </small>
+
                 </button>
 
-                <button onclick="saveReel(this)">
-                    <span>🔖</span>
-                    <small>Save</small>
+
+                <button
+                    onclick="saveReel(this)">
+
+                    <span>
+                        🔖
+                    </span>
+
+                    <small>
+                        Save
+                    </small>
+
                 </button>
 
             </div>
 
+
             <div class="reel-info">
-                <strong>@NV_travelss</strong>
-                <p>Travel with NV Travelss ✈️</p>
-                <small>#travel #taxi #india #trip</small>
+
+                <strong>
+                    @NV_travelss
+                </strong>
+
+                <p>
+                    Travel with NV Travelss ✈️
+                </p>
+
+                <small>
+                    #travel #taxi #india #trip
+                </small>
+
             </div>
 
         </article>
@@ -351,41 +741,99 @@
         <!-- REEL 2 -->
         <article class="reel">
 
+
             <div class="reel-video second-video">
+
                 <div class="fake-video">
-                    <span>▶</span>
-                    <p>Mountain Travel</p>
+
+                    <span>
+                        ▶
+                    </span>
+
+                    <p>
+                        Mountain Travel
+                    </p>
+
                 </div>
+
             </div>
+
 
             <div class="reel-actions">
 
-                <button onclick="likeReel(this)">
-                    <span>❤️</span>
-                    <small>Like</small>
+
+                <button
+                    onclick="likeReel(this)">
+
+                    <span>
+                        ❤️
+                    </span>
+
+                    <small>
+                        Like
+                    </small>
+
                 </button>
 
-                <button onclick="commentReel()">
-                    <span>💬</span>
-                    <small>Comment</small>
+
+                <button
+                    onclick="commentReel()">
+
+                    <span>
+                        💬
+                    </span>
+
+                    <small>
+                        Comment
+                    </small>
+
                 </button>
 
-                <button onclick="shareReel()">
-                    <span>↗️</span>
-                    <small>Share</small>
+
+                <button
+                    onclick="shareReel()">
+
+                    <span>
+                        ↗️
+                    </span>
+
+                    <small>
+                        Share
+                    </small>
+
                 </button>
 
-                <button onclick="saveReel(this)">
-                    <span>🔖</span>
-                    <small>Save</small>
+
+                <button
+                    onclick="saveReel(this)">
+
+                    <span>
+                        🔖
+                    </span>
+
+                    <small>
+                        Save
+                    </small>
+
                 </button>
 
             </div>
 
+
             <div class="reel-info">
-                <strong>@NV_travelss</strong>
-                <p>Explore more with NV Travelss 🏔️</p>
-                <small>#mountains #travel #vacation</small>
+
+                <strong>
+                    @NV_travelss
+                </strong>
+
+                <p>
+                    Explore more with NV Travelss 🏔️
+                </p>
+
+                <small>
+                    #mountains #travel #vacation
+                </small>
+
             </div>
 
         </article>
@@ -393,79 +841,160 @@
     </main>
 
 
-    <!-- SEARCH PAGE -->
-    <main id="searchPage" class="page">
+    <!-- ================= SEARCH PAGE ================= -->
+    <main
+        id="searchPage"
+        class="page">
+
 
         <div class="page-heading">
-            <h1>🔍 Search</h1>
-            <p>Search rides, hotels, packages and reels</p>
+
+            <h1>
+                🔍 Search
+            </h1>
+
+            <p>
+                Search rides, hotels, packages and reels
+            </p>
+
         </div>
+
 
         <div class="search-container">
 
-            <input id="searchInput"
-                   type="text"
-                   placeholder="Search...">
 
-            <button onclick="performSearch()">
+            <input
+                id="searchInput"
+                type="text"
+                placeholder="Search..."
+            >
+
+
+            <button
+                onclick="performSearch()">
+
                 Search
+
             </button>
 
         </div>
 
-        <div id="searchResult" class="result-box"></div>
+
+        <div
+            id="searchResult"
+            class="result-box">
+        </div>
 
     </main>
 
 
-    <!-- PROFILE PAGE -->
-    <main id="profilePage" class="page">
+    <!-- ================= PROFILE PAGE ================= -->
+    <main
+        id="profilePage"
+        class="page">
+
 
         <div class="profile-header">
 
-            <div class="avatar">👤</div>
 
-            <h1 id="profileName">Traveler</h1>
+            <div class="avatar">
+                👤
+            </div>
 
-            <p>NV Travelss Member</p>
+
+            <h1 id="profileName">
+                Traveler
+            </h1>
+
+
+            <p>
+                NV Travelss Member
+            </p>
 
         </div>
 
+
         <div class="profile-menu">
 
-            <button onclick="showMessage('My Rides')">
+
+            <button
+                onclick="showMessage('My Rides')">
+
                 🚕 My Rides
-                <span>›</span>
+
+                <span>
+                    ›
+                </span>
+
             </button>
 
-            <button onclick="showMessage('My Hotels')">
+
+            <button
+                onclick="showMessage('My Hotels')">
+
                 🏨 My Hotels
-                <span>›</span>
+
+                <span>
+                    ›
+                </span>
+
             </button>
 
-            <button onclick="showMessage('My Packages')">
+
+            <button
+                onclick="showMessage('My Packages')">
+
                 🎒 My Packages
-                <span>›</span>
+
+                <span>
+                    ›
+                </span>
+
             </button>
 
-            <button onclick="showMessage('Booking History')">
+
+            <button
+                onclick="showMessage('Booking History')">
+
                 📜 Booking History
-                <span>›</span>
+
+                <span>
+                    ›
+                </span>
+
             </button>
 
-            <button onclick="openMessages()">
+
+            <button
+                onclick="openMessages()">
+
                 💬 Messages
-                <span>›</span>
+
+                <span>
+                    ›
+                </span>
+
             </button>
 
-            <button onclick="showMessage('Settings')">
+
+            <button
+                onclick="showMessage('Settings')">
+
                 ⚙️ Settings
-                <span>›</span>
+
+                <span>
+                    ›
+                </span>
+
             </button>
 
-            <button class="logout-btn"
-                    onclick="logout()">
+
+            <button
+                class="logout-btn"
+                onclick="logout()">
+
                 🚪 Logout
+
             </button>
 
         </div>
@@ -473,37 +1002,82 @@
     </main>
 
 
-    <!-- BOTTOM NAV -->
+    <!-- ================= BOTTOM NAV ================= -->
     <nav class="bottom-nav">
 
-        <button class="nav-btn active"
-                onclick="openPage('homePage')">
-            <span>⌂</span>
-            <small>Home</small>
+
+        <button
+            class="nav-btn active"
+            onclick="openPage('homePage')">
+
+            <span>
+                ⌂
+            </span>
+
+            <small>
+                Home
+            </small>
+
         </button>
 
-        <button class="nav-btn"
-                onclick="openPage('reelsPage')">
-            <span>🎬</span>
-            <small>Reels</small>
+
+        <button
+            class="nav-btn"
+            onclick="openPage('reelsPage')">
+
+            <span>
+                🎬
+            </span>
+
+            <small>
+                Reels
+            </small>
+
         </button>
 
-        <button class="nav-btn post-btn"
-                onclick="createPost()">
-            <span>＋</span>
-            <small>Post</small>
+
+        <button
+            class="nav-btn post-btn"
+            onclick="createPost()">
+
+            <span>
+                ＋
+            </span>
+
+            <small>
+                Post
+            </small>
+
         </button>
 
-        <button class="nav-btn"
-                onclick="openPage('searchPage')">
-            <span>⌕</span>
-            <small>Search</small>
+
+        <button
+            class="nav-btn"
+            onclick="openPage('searchPage')">
+
+            <span>
+                ⌕
+            </span>
+
+            <small>
+                Search
+            </small>
+
         </button>
 
-        <button class="nav-btn"
-                onclick="openPage('profilePage')">
-            <span>👤</span>
-            <small>Profile</small>
+
+        <button
+            class="nav-btn"
+            onclick="openPage('profilePage')">
+
+            <span>
+                👤
+            </span>
+
+            <small>
+                Profile
+            </small>
+
         </button>
 
     </nav>
@@ -512,17 +1086,33 @@
 
 
 <!-- ================= DRIVER DASHBOARD ================= -->
-<section id="driverApp" class="app-screen">
+<section
+    id="driverApp"
+    class="app-screen">
 
+
+    <!-- DRIVER HEADER -->
     <header class="driver-header">
 
+
         <div>
-            <small>NV TRAVELSS</small>
-            <h2>Driver Dashboard</h2>
+
+            <small>
+                NV TRAVELSS
+            </small>
+
+            <h2>
+                Driver Dashboard
+            </h2>
+
         </div>
 
-        <button onclick="driverLogout()">
+
+        <button
+            onclick="driverLogout()">
+
             🚪
+
         </button>
 
     </header>
@@ -530,125 +1120,206 @@
 
     <main class="driver-content">
 
+
+        <!-- DRIVER WELCOME -->
         <div class="driver-welcome">
-            <p>Welcome Driver 👋</p>
-            <h1 id="driverName">Driver</h1>
-        </div>
-
-
-        <!-- ONLINE BOX -->
-        <div class="online-card">
-
-            <div>
-                <strong>Driver Status</strong>
-                <p id="driverStatusText">Offline</p>
-            </div>
-
-            <button id="onlineButton"
-                    class="status-toggle"
-                    onclick="toggleDriverStatus()">
-                GO ONLINE
-            </button>
-
-        </div>
-
-
-        <!-- EARNINGS -->
-        <div class="driver-stats">
-
-            <div>
-                <span>💰</span>
-                <strong id="driverEarnings">₹0</strong>
-                <small>Earnings</small>
-            </div>
-
-            <div>
-                <span>🚕</span>
-                <strong id="driverRides">0</strong>
-                <small>Rides</small>
-            </div>
-
-            <div>
-                <span>📊</span>
-                <strong>15%</strong>
-                <small>Commission</small>
-            </div>
-
-        </div>
-
-
-        <!-- RIDE REQUEST -->
-        <div class="driver-card">
-
-            <div class="driver-card-title">
-                <h3>🚕 Ride Requests</h3>
-                <span id="requestBadge">1</span>
-            </div>
-
-            <div class="ride-request">
-
-                <p><strong>📍 Pickup</strong></p>
-                <span>Customer Location</span>
-
-                <p><strong>📍 Destination</strong></p>
-                <span>Destination Location</span>
-
-                <p><strong>💰 Estimated Fare</strong></p>
-                <strong>₹1000</strong>
-
-                <div class="request-buttons">
-
-                    <button class="reject-btn"
-                            onclick="rejectRide()">
-                        Reject
-                    </button>
-
-                    <button class="accept-btn"
-                            onclick="acceptRide()">
-                        Accept Ride
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- DRIVER PASS -->
-        <div class="driver-card">
-
-            <h3>🎫 Driver Pass</h3>
-
-            <div class="pass-info">
-                <strong>₹75 / 24 Hours</strong>
-                <span id="passStatus">Not Active</span>
-            </div>
-
-            <button class="primary-btn"
-                    onclick="activatePass()">
-                Take Driver Pass
-            </button>
-
-        </div>
-
-
-        <!-- COMMISSION -->
-        <div class="driver-card">
-
-            <h3>💳 Commission</h3>
 
             <p>
-                Driver commission: <strong>15%</strong>
+                Welcome Driver 👋
             </p>
+
+            <h1 id="driverName">
+                Driver
+            </h1>
+
+        </div>
+
+
+        <!-- ================= ONLINE BOX ================= -->
+        <div class="online-card">
+
+
+            <div>
+
+                <strong>
+                    Driver Status
+                </strong>
+
+                <p id="driverStatusText">
+                    Offline
+                </p>
+
+            </div>
+
+
+            <button
+                id="onlineButton"
+                class="status-toggle"
+                onclick="toggleDriverStatus()">
+
+                GO ONLINE
+
+            </button>
+
+        </div>
+
+
+        <!-- ================= EARNINGS ================= -->
+        <div class="driver-stats">
+
+
+            <div>
+
+                <span>
+                    💰
+                </span>
+
+                <strong id="driverEarnings">
+                    ₹0
+                </strong>
+
+                <small>
+                    Earnings
+                </small>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    🚕
+                </span>
+
+                <strong id="driverRides">
+                    0
+                </strong>
+
+                <small>
+                    Rides
+                </small>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    📊
+                </span>
+
+                <strong>
+                    15%
+                </strong>
+
+                <small>
+                    Commission
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= RIDE REQUEST ================= -->
+        <div class="driver-card">
+
+
+            <div class="driver-card-title">
+
+                <h3>
+                    🚕 Ride Requests
+                </h3>
+
+
+                <span id="requestBadge">
+                    0
+                </span>
+
+            </div>
+
+
+            <!--
+                Firebase se real ride yahan show hogi.
+                Purani dummy ride hata di gayi hai.
+            -->
+
+            <div
+                id="liveRideRequest"
+                class="ride-request">
+
+                <p>
+                    🚕 No new ride requests.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= DRIVER PASS ================= -->
+        <div class="driver-card">
+
+
+            <h3>
+                🎫 Driver Pass
+            </h3>
+
+
+            <div class="pass-info">
+
+
+                <strong>
+                    ₹75 / 24 Hours
+                </strong>
+
+
+                <span id="passStatus">
+                    Not Active
+                </span>
+
+            </div>
+
+
+            <button
+                class="primary-btn"
+                onclick="activatePass()">
+
+                Take Driver Pass
+
+            </button>
+
+        </div>
+
+
+        <!-- ================= COMMISSION ================= -->
+        <div class="driver-card">
+
+
+            <h3>
+                💳 Commission
+            </h3>
+
+
+            <p>
+                Driver commission:
+                <strong>
+                    15%
+                </strong>
+            </p>
+
 
             <p id="commissionText">
                 No pending commission
             </p>
 
-            <button class="primary-btn"
-                    onclick="payCommission()">
+
+            <button
+                class="primary-btn"
+                onclick="payCommission()">
+
                 Pay Commission
+
             </button>
 
         </div>
@@ -657,43 +1328,63 @@
 
 </section>
 
-<!-- Firebase Phone OTP -->
+
+<!-- ================= FIREBASE ================= -->
+
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
-<!-- Firebase Phone OTP -->
-<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
 
+
 <script>
+
 const firebaseConfig = {
-    apiKey: "AIzaSyBBE42Ab1hcDTdf6XYk2e-Q_7tVVJUNvdU",
-    authDomain: "nvravels.firebaseapp.com",
-    projectId: "nvravels",
-    storageBucket: "nvravels.firebasestorage.app",
-    messagingSenderId: "822757201776",
-    appId: "1:822757201776:web:f5a9dbea4e31dbbcbf61b5",
-    measurementId: "G-CTZ9K30T2N"
+
+    apiKey:
+        "AIzaSyBBE42Ab1hcDTdf6XYk2e-Q_7tVVJUNvdU",
+
+    authDomain:
+        "nvravels.firebaseapp.com",
+
+    projectId:
+        "nvravels",
+
+    storageBucket:
+        "nvravels.firebasestorage.app",
+
+    messagingSenderId:
+        "822757201776",
+
+    appId:
+        "1:822757201776:web:f5a9dbea4e31dbbcbf61b5",
+
+    measurementId:
+        "G-CTZ9K30T2N"
+
 };
 
-firebase.initializeApp(firebaseConfig);
+
+/*
+   Firebase sirf EK baar initialize hoga.
+*/
+
+if (!firebase.apps.length) {
+
+    firebase.initializeApp(
+        firebaseConfig
+    );
+
+}
+
 </script>
 
-<script src="script.js"></script>
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyBBE42Ab1hcDTdf6XYk2e-Q_7tVVJUNvdU",
-    authDomain: "nvravels.firebaseapp.com",
-    projectId: "nvravels",
-    storageBucket: "nvravels.firebasestorage.app",
-    messagingSenderId: "822757201776",
-    appId: "1:822757201776:web:f5a9dbea4e31dbbcbf61b5",
-    measurementId: "G-CTZ9K30T2N"
-};
 
-firebase.initializeApp(firebaseConfig);
-</script>
+<!-- ================= APP SCRIPT ================= -->
+
 <script src="script.js"></script>
+
 
 </body>
 </html>
