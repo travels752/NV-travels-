@@ -152,17 +152,28 @@ function setText(id, value) {
 }
 
 function showScreen(id) {
-    ["loginScreen", "customerApp", "driverApp"].forEach(screenId => {
-        const el = getElement(screenId);
-        if (el) el.style.display = screenId === id ? "" : "none";
+    const screenIds = [
+        "loginScreen",
+        "customerApp",
+        "driverApp",
+        "hotelOwnerDashboard"
+    ];
+
+    screenIds.forEach(function (screenId) {
+        const el = document.getElementById(screenId);
+        if (!el) return;
+
+        const visible = screenId === id;
+
+        if (screenId === "loginScreen") {
+            el.style.display = visible ? "flex" : "none";
+            el.classList.toggle("active-screen", visible);
+        } else {
+            el.style.display = visible ? "block" : "none";
+            el.classList.toggle("active-app", visible);
+        }
     });
-
-    const hotelPanel = getElement("hotelOwnerDashboard");
-    if (hotelPanel) {
-        hotelPanel.style.display = id === "hotelOwnerDashboard" ? "" : "none";
-    }
 }
-
 /* ================= LOGIN ROLE ================= */
 
 document.querySelectorAll(".role-btn").forEach(button => {
