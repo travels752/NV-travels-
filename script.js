@@ -1,4779 +1,1619 @@
-/* =========================================
-NV TRAVELSS - FINAL APP LOGIC
-FIREBASE OTP + CUSTOMER → DRIVER RIDES
-RIDE CONNECTION + MULTIPLE RIDES + OTP
-GPS + FARE + RIDE STATUS
-PICKUP NAVIGATION + DESTINATION NAVIGATION
-========================================= */
+/* =====================================================
+   NV TRAVELSS — COMPLETE APP SCRIPT
+   Customer + Driver + Hotel
+   Firebase OTP + Ride Requests + Ride OTP
+   GPS + Google Maps Links + Fare + Hotel Bookings
+   Compatible with the supplied index.html
+===================================================== */
+
+"use strict";
+
+/* ================= FIREBASE ================= */
+
+if (typeof firebase === "undefined" || !firebase.apps.length) {
+    console.error("Firebase initialize nahi hua. index.html check karein.");
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ================= APP STATE ================= */
 
 let selectedRole = "customer";
-
-let driverOnline = false;
-let driverEarnings = 0;
-let driverRides = 0;
-
-let pendingRide = false;
-let currentRide = null;
-
-/* Accepted driver ride */
-let activeRideId = null;
-
-/* Prevent double accept */
-let acceptingRide = false;
-
+let currentUser = null;
 let confirmationResult = null;
 let recaptchaVerifier = null;
 
-/* Customer aur Driver listeners alag */
-let customerRideListener = null;
-let driverRideListener = null;
+let driverOnline = false;
+let activeRideId = null;
+let currentRide = null;
 
-/* Multiple pending rides */
-let driverPendingRides = {};
+let customerRideUnsubscribe = null;
+let driverRequestsUnsubscribe = null;
+let driverActiveUnsubscribe = null;
+let hotelBookingsUnsubscribe = null;
 
-/* Ride OTP */
-let rideOtp = "";
+let driverGpsWatchId = null;
+let customerGpsWatchId = null;
 
-/* GPS */
-let gpsWatchId = null;
-let gpsTrackingRideId = null;
-let gpsLastPosition = null;
-let gpsTotalDistanceKm = 0;
-let gpsLastUpdateTime = 0;
+let lastDriverPosition = null;
+let driverDistanceKm = 0;
 
+let driverEarnings = 0;
+let driverRides = 0;
+let driverPassActiveUntil = 0;
 
-/* =========================================
-FIREBASE DATABASE
-========================================= */
+const VEHICLE_RATES = {
+    "bike": 10,
+    "auto": 15,
+    "hatchback": 16,
+    "sedan": 18,
+    "suv": 22,
+    "muv": 24,
+    "premium": 30,
+    "6-7-seater": 25,
+    "8-12-seater": 30,
+    "tempo-traveller": 35,
+    "mini-bus": 45,
+    "bus": 60
+};
 
-function getDatabase() {
+const VEHICLE_NAMES = {
+    "bike": "Bike",
+    "auto": "Auto Rickshaw",
+    "hatchback": "Hatchback",
+    "sedan": "Sedan",
+    "suv": "SUV",
+    "muv": "MUV",
+    "premium": "Premium / Luxury Car",
+    "6-7-seater": "6–7 Seater",
+    "8-12-seater": "8–12 Seater",
+    "tempo-traveller": "Tempo Traveller",
+    "mini-bus": "Mini Bus",
+    "bus": "Bus"
+};
 
-    if (typeof firebase === "undefined") {
-        console.error("Firebase SDK not loaded.");
-        return null;
-    }
+const ACTIVE_RIDE_STATUSES = [
+    "accepted",
+    "driverComing",
+    "started"
+];
 
-    if (!firebase.firestore) {
-        console.error("Firebase Firestore SDK not loaded.");
-        return null;
-    }
+/* ================= HELPERS ================= */
 
-    return firebase.firestore();
+function getElement(id) {
+    return document.getElementById(id);
 }
 
-
-/* =========================================
-VEHICLE RATES
-========================================= */
-
-function getVehicleRate(vehicle) {
-
-    const rates = {
-        bike: 10,
-        auto: 15,
-        hatchback: 16,
-        sedan: 18,
-        suv: 22,
-        muv: 24,
-        premium: 30,
-        "6-7-seater": 25,
-        "8-12-seater": 30,
-        "tempo-traveller": 35,
-        "mini-bus": 45,
-        bus: 60
-    };
-
-    return rates[vehicle] || 0;
+function getUserName() {
+    return currentUser?.name || "Traveler";
 }
 
-
-/* =========================================
-VEHICLE NAMES
-========================================= */
-
-function getVehicleName(vehicle) {
-
-    const names = {
-        bike: "🏍️ Bike",
-        auto: "🛺 Auto Rickshaw",
-        hatchback: "🚗 Hatchback",
-        sedan: "🚘 Sedan",
-        suv: "🚙 SUV",
-        muv: "🚐 MUV",
-        premium: "🚙 Premium / Luxury Car",
-        "6-7-seater": "🚐 6–7 Seater",
-        "8-12-seater": "🚐 8–12 Seater",
-        "tempo-traveller": "🚐 Tempo Traveller",
-        "mini-bus": "🚌 Mini Bus",
-        bus: "🚌 Bus"
-    };
-
-    return names[vehicle] || vehicle || "Vehicle";
+function getUserPhone() {
+    return currentUser?.phone || "";
 }
 
+function getUserRole() {
+    return currentUser?.role || selectedRole;
+}
 
-/* =========================================
-LOGIN ROLE
-========================================= */
+function showNotice(message) {
+    alert(String(message));
+}
 
-document.addEventListener("DOMContentLoaded", function () {
+function safeText(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
 
-    const roleButtons =
-        document.querySelectorAll(".role-btn");
+function formatMoney(value) {
+    return "₹" + Math.round(Number(value) || 0).toLocaleString("en-IN");
+}
 
-    roleButtons.forEach(function (button) {
+function makeGoogleMapsUrl(destination) {
+    return "https://www.google.com/maps/dir/?api=1&destination=" +
+        encodeURIComponent(destination || "");
+}
 
-        button.addEventListener("click", function () {
+function makeCoordinateMapsUrl(lat, lng) {
+    return "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(lat + "," + lng);
+}
 
-            roleButtons.forEach(function (btn) {
-                btn.classList.remove("active");
-            });
+function generateRideOTP() {
+    return String(Math.floor(1000 + Math.random() * 9000));
+}
 
-            this.classList.add("active");
+function haversineKm(a, b) {
+    if (!a || !b) return 0;
 
-            selectedRole =
-                this.dataset.role;
+    const R = 6371;
+    const rad = value => value * Math.PI / 180;
 
-        });
+    const dLat = rad(b.lat - a.lat);
+    const dLng = rad(b.lng - a.lng);
 
+    const h =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(rad(a.lat)) *
+        Math.cos(rad(b.lat)) *
+        Math.sin(dLng / 2) ** 2;
+
+    return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function setText(id, value) {
+    const el = getElement(id);
+    if (el) el.textContent = value;
+}
+
+function showScreen(id) {
+    ["loginScreen", "customerApp", "driverApp"].forEach(screenId => {
+        const el = getElement(screenId);
+        if (el) el.style.display = screenId === id ? "" : "none";
     });
 
-
-    const loginButton =
-        document.getElementById("loginButton");
-
-    const verifyOtpButton =
-        document.getElementById("verifyOtpButton");
-
-
-    if (loginButton) {
-        loginButton.addEventListener(
-            "click",
-            login
-        );
+    const hotelPanel = getElement("hotelOwnerDashboard");
+    if (hotelPanel) {
+        hotelPanel.style.display = id === "hotelOwnerDashboard" ? "" : "none";
     }
+}
 
+/* ================= LOGIN ROLE ================= */
 
-    if (verifyOtpButton) {
-        verifyOtpButton.addEventListener(
-            "click",
-            verifyOTP
-        );
-    }
+document.querySelectorAll(".role-btn").forEach(button => {
+    button.addEventListener("click", () => {
+        selectedRole = button.dataset.role || "customer";
 
+        document.querySelectorAll(".role-btn").forEach(btn => {
+            btn.classList.toggle("active", btn === button);
+        });
+    });
 });
 
+/* ================= FIREBASE PHONE OTP ================= */
 
-/* =========================================
-FIREBASE OTP LOGIN
-========================================= */
+function setupRecaptcha() {
+    if (recaptchaVerifier) return;
 
-function login() {
+    try {
+        recaptchaVerifier = new firebase.auth.RecaptchaVerifier(
+            "recaptcha-container",
+            {
+                size: "normal",
+                callback: () => {
+                    console.log("reCAPTCHA verified");
+                },
+                "expired-callback": () => {
+                    setText("otpMessage", "reCAPTCHA expire ho gaya. Dobara verify karein.");
+                }
+            }
+        );
 
-    const nameInput =
-        document.getElementById("loginName");
+        recaptchaVerifier.render().catch(error => {
+            console.error("reCAPTCHA render error:", error);
+        });
+    } catch (error) {
+        console.error("reCAPTCHA error:", error);
+    }
+}
 
-    const phoneInput =
-        document.getElementById("loginPhone");
+async function login() {
+    const name = getElement("loginName")?.value.trim();
+    const rawPhone = getElement("loginPhone")?.value.trim();
 
-    const otpInput =
-        document.getElementById("otpInput");
-
-    const loginButton =
-        document.getElementById("loginButton");
-
-    const verifyButton =
-        document.getElementById("verifyOtpButton");
-
-    const message =
-        document.getElementById("otpMessage");
-
-
-    if (!nameInput || !phoneInput || !message) {
-
-        console.error("Login elements not found.");
-
+    if (!name) {
+        showNotice("Apna naam enter karein.");
         return;
     }
 
-
-    const name =
-        nameInput.value.trim();
-
-    let phone =
-        phoneInput.value.trim();
-
-
-    if (name === "") {
-
-        alert("Please enter your name.");
-
-        nameInput.focus();
-
+    if (!rawPhone) {
+        showNotice("Mobile number enter karein.");
         return;
     }
 
-
-    if (phone === "") {
-
-        alert("Please enter your mobile number.");
-
-        phoneInput.focus();
-
-        return;
-    }
-
-
-    phone =
-        phone.replace(/\D/g, "");
-
+    let phone = rawPhone.replace(/\D/g, "");
 
     if (phone.length === 10) {
         phone = "+91" + phone;
-    }
-
-
-    if (
-        !phone.startsWith("+91") ||
-        phone.length !== 13
-    ) {
-
-        alert(
-            "Please enter a valid 10 digit Indian mobile number."
-        );
-
-        phoneInput.focus();
-
+    } else if (phone.length === 12 && phone.startsWith("91")) {
+        phone = "+" + phone;
+    } else {
+        showNotice("Sahi 10-digit Indian mobile number enter karein.");
         return;
     }
 
-
-    localStorage.setItem(
-        "nvUserName",
-        name
-    );
-
-    localStorage.setItem(
-        "nvUserRole",
-        selectedRole
-    );
-
-    localStorage.setItem(
-        "nvUserPhone",
-        phone
-    );
-
-
-    message.style.display = "block";
-
-    message.textContent =
-        "Sending OTP...";
-
-
-    if (loginButton) {
-        loginButton.disabled = true;
+    if (!/^\+91[6-9]\d{9}$/.test(phone)) {
+        showNotice("Sahi Indian mobile number enter karein.");
+        return;
     }
 
+    const loginButton = getElement("loginButton");
+    if (loginButton) loginButton.disabled = true;
 
     try {
+        setupRecaptcha();
 
         if (!recaptchaVerifier) {
-
-            recaptchaVerifier =
-                new firebase.auth.RecaptchaVerifier(
-                    "recaptcha-container",
-                    {
-                        size: "normal"
-                    }
-                );
-
+            throw new Error("reCAPTCHA ready nahi hai. Page reload karke try karein.");
         }
 
+        await recaptchaVerifier.render();
 
-        firebase.auth()
-            .signInWithPhoneNumber(
-                phone,
-                recaptchaVerifier
-            )
-
-            .then(function (result) {
-
-                confirmationResult =
-                    result;
-
-                message.textContent =
-                    "OTP sent to your mobile number.";
-
-
-                if (otpInput) {
-                    otpInput.style.display = "block";
-                }
-
-
-                if (verifyButton) {
-                    verifyButton.style.display = "block";
-                }
-
-
-                if (loginButton) {
-                    loginButton.style.display = "none";
-                }
-
-
-                if (otpInput) {
-                    otpInput.focus();
-                }
-
-            })
-
-            .catch(function (error) {
-
-                console.error(
-                    "OTP error:",
-                    error
-                );
-
-                message.textContent =
-                    "OTP send nahi hua: " +
-                    error.message;
-
-
-                if (loginButton) {
-                    loginButton.disabled = false;
-                }
-
-
-                if (recaptchaVerifier) {
-
-                    try {
-                        recaptchaVerifier.clear();
-                    } catch (e) {}
-
-                    recaptchaVerifier = null;
-                }
-
-            });
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Firebase OTP error:",
-            error
+        confirmationResult = await auth.signInWithPhoneNumber(
+            phone,
+            recaptchaVerifier
         );
 
-        message.textContent =
-            "Firebase OTP error: " +
-            error.message;
+        window.nvPendingLogin = {
+            name,
+            phone,
+            role: selectedRole
+        };
 
+        const otpInput = getElement("otpInput");
+        const verifyButton = getElement("verifyOtpButton");
 
-        if (loginButton) {
-            loginButton.disabled = false;
+        if (otpInput) {
+            otpInput.style.display = "block";
+            otpInput.value = "";
         }
 
-    }
+        if (verifyButton) verifyButton.style.display = "block";
 
+        setText("otpMessage", "OTP SMS se bhej diya gaya hai. Apna OTP enter karein.");
+
+        if (loginButton) loginButton.style.display = "none";
+
+    } catch (error) {
+        console.error("Phone login error:", error);
+
+        setText(
+            "otpMessage",
+            "OTP nahi bheja gaya: " + (error.message || error.code || "Error")
+        );
+
+        try {
+            if (recaptchaVerifier) {
+                await recaptchaVerifier.clear();
+                recaptchaVerifier = null;
+            }
+        } catch (_) {}
+
+    } finally {
+        if (loginButton) loginButton.disabled = false;
+    }
 }
 
+async function verifyOTP() {
+    const otp = getElement("otpInput")?.value.trim();
+    const pending = window.nvPendingLogin;
 
-/* =========================================
-VERIFY LOGIN OTP
-========================================= */
-
-function verifyOTP() {
-
-    const otpInput =
-        document.getElementById("otpInput");
-
-    const message =
-        document.getElementById("otpMessage");
-
-
-    if (!otpInput || !message) {
+    if (!confirmationResult || !pending) {
+        showNotice("Pehle Login dabakar OTP mangwayein.");
         return;
     }
 
-
-    const code =
-        otpInput.value.trim();
-
-
-    if (code.length !== 6) {
-
-        alert(
-            "Please enter the 6 digit OTP."
-        );
-
-        otpInput.focus();
-
+    if (!/^\d{6}$/.test(otp || "")) {
+        showNotice("6-digit Firebase OTP enter karein.");
         return;
     }
-
-
-    if (!confirmationResult) {
-
-        alert(
-            "Please request OTP first."
-        );
-
-        return;
-    }
-
-
-    message.textContent =
-        "Verifying OTP...";
-
-
-    confirmationResult
-        .confirm(code)
-
-        .then(function () {
-
-            message.textContent =
-                "Login successful! Welcome to NV Travelss.";
-
-            openLoggedInApp();
-
-        })
-
-        .catch(function (error) {
-
-            console.error(
-                "OTP verification error:",
-                error
-            );
-
-            message.textContent =
-                "Invalid OTP. Please try again.";
-
-        });
-
-}
-
-
-/* =========================================
-OPEN APP
-========================================= */
-
-function openLoggedInApp() {
-
-    const name =
-        localStorage.getItem(
-            "nvUserName"
-        ) || "Traveler";
-
-
-    const role =
-        localStorage.getItem(
-            "nvUserRole"
-        ) || selectedRole;
-
-
-    const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
-
-
-    if (loginScreen) {
-
-        loginScreen.classList.remove(
-            "active-screen"
-        );
-
-    }
-
-
-    /* =====================================
-       DRIVER
-    ===================================== */
-
-    if (role === "driver") {
-
-        stopCustomerRideListener();
-
-        const driverApp =
-            document.getElementById(
-                "driverApp"
-            );
-
-
-        if (driverApp) {
-
-            driverApp.classList.add(
-                "active-app"
-            );
-
-        }
-
-
-        const driverName =
-            document.getElementById(
-                "driverName"
-            );
-
-
-        if (driverName) {
-
-            driverName.textContent =
-                name;
-
-        }
-
-
-        driverOnline =
-            false;
-
-        activeRideId =
-            null;
-
-        pendingRide =
-            false;
-
-        currentRide =
-            null;
-
-        acceptingRide =
-            false;
-
-        driverPendingRides =
-            {};
-
-
-        updateDriverStatusUI();
-
-        showNoRideRequest();
-
-    }
-
-
-    /* =====================================
-       CUSTOMER
-    ===================================== */
-
-    else {
-
-        stopDriverRideListener();
-
-        const customerApp =
-            document.getElementById(
-                "customerApp"
-            );
-
-
-        if (customerApp) {
-
-            customerApp.classList.add(
-                "active-app"
-            );
-
-        }
-
-
-        const welcomeName =
-            document.getElementById(
-                "welcomeName"
-            );
-
-
-        const profileName =
-            document.getElementById(
-                "profileName"
-            );
-
-
-        if (welcomeName) {
-
-            welcomeName.textContent =
-                name;
-
-        }
-
-
-        if (profileName) {
-
-            profileName.textContent =
-                name;
-
-        }
-
-
-        openPage("homePage");
-
-        startCustomerRideListener();
-
-    }
-
-}
-
-
-/* =========================================
-CUSTOMER PAGE NAVIGATION
-========================================= */
-
-function openPage(pageId) {
-
-    const pages =
-        document.querySelectorAll(
-            "#customerApp .page"
-        );
-
-
-    pages.forEach(function (page) {
-
-        page.classList.remove(
-            "active-page"
-        );
-
-    });
-
-
-    const selectedPage =
-        document.getElementById(
-            pageId
-        );
-
-
-    if (selectedPage) {
-
-        selectedPage.classList.add(
-            "active-page"
-        );
-
-    }
-
-
-    updateBottomNavigation(
-        pageId
-    );
-
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-
-}
-
-
-/* =========================================
-GO HOME
-========================================= */
-
-function goHome() {
-
-    openPage("homePage");
-
-}
-
-
-/* =========================================
-BOTTOM NAVIGATION
-========================================= */
-
-function updateBottomNavigation(pageId) {
-
-    const navButtons =
-        document.querySelectorAll(
-            ".nav-btn"
-        );
-
-
-    navButtons.forEach(function (button) {
-
-        button.classList.remove(
-            "active"
-        );
-
-    });
-
-
-    if (
-        pageId === "homePage" &&
-        navButtons[0]
-    ) {
-
-        navButtons[0].classList.add(
-            "active"
-        );
-
-    }
-
-
-    if (
-        pageId === "reelsPage" &&
-        navButtons[1]
-    ) {
-
-        navButtons[1].classList.add(
-            "active"
-        );
-
-    }
-
-
-    if (
-        pageId === "searchPage" &&
-        navButtons[3]
-    ) {
-
-        navButtons[3].classList.add(
-            "active"
-        );
-
-    }
-
-
-    if (
-        pageId === "profilePage" &&
-        navButtons[4]
-    ) {
-
-        navButtons[4].classList.add(
-            "active"
-        );
-
-    }
-
-}
-
-
-/* =========================================
-GENERATE RIDE OTP
-========================================= */
-
-function generateRideOTP() {
-
-    return String(
-        Math.floor(
-            1000 +
-            Math.random() * 9000
-        )
-    );
-
-}
-
-
-/* =========================================
-CUSTOMER REQUEST RIDE
-========================================= */
-
-function requestRide() {
-
-    const pickupInput =
-        document.getElementById("pickupLocation");
-
-    const destinationInput =
-        document.getElementById("destinationLocation");
-
-    const vehicleInput =
-        document.getElementById("vehicleType");
-
-    const message =
-        document.getElementById("rideMessage");
-
-
-    if (
-        !pickupInput ||
-        !destinationInput ||
-        !vehicleInput ||
-        !message
-    ) {
-
-        console.error(
-            "❌ Ride form elements not found."
-        );
-
-        return;
-    }
-
-
-    const pickup =
-        pickupInput.value.trim();
-
-    const destination =
-        destinationInput.value.trim();
-
-    const vehicle =
-        vehicleInput.value;
-
-
-    if (
-        !pickup ||
-        !destination ||
-        !vehicle
-    ) {
-
-        message.style.display =
-            "block";
-
-        message.textContent =
-            "Please fill pickup, destination and vehicle.";
-
-        return;
-    }
-
-
-    const rate =
-        getVehicleRate(vehicle);
-
-
-    if (rate <= 0) {
-
-        message.style.display =
-            "block";
-
-        message.textContent =
-            "Please select a valid vehicle.";
-
-        return;
-    }
-
-
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-
-        message.style.display =
-            "block";
-
-        message.textContent =
-            "❌ Firebase database is not connected.";
-
-        return;
-    }
-
-
-    const customerName =
-        localStorage.getItem(
-            "nvUserName"
-        ) || "Traveler";
-
-
-    const customerPhone =
-        localStorage.getItem(
-            "nvUserPhone"
-        ) || "";
-
-
-    /* Ride OTP */
-    const customerRideOtp =
-        generateRideOTP();
-
-
-    message.style.display =
-        "block";
-
-
-    message.innerHTML =
-        "🚕 Creating ride request...";
-
-
-    const rideData = {
-
-        customerName:
-            customerName,
-
-        customerPhone:
-            customerPhone,
-
-        pickup:
-            pickup,
-
-        destination:
-            destination,
-
-        vehicle:
-            vehicle,
-
-        vehicleName:
-            getVehicleName(vehicle),
-
-        ratePerKm:
-            rate,
-
-        fare:
-            rate,
-
-        baseFare:
-            rate,
-
-        status:
-            "searching",
-
-        createdAt:
-            new Date(),
-
-        acceptedBy:
-            "",
-
-        driverName:
-            "",
-
-        driverPhone:
-            "",
-
-        acceptedAt:
-            null,
-
-        driverComingAt:
-            null,
-
-        startedAt:
-            null,
-
-        completedAt:
-            null,
-
-        rejectedBy:
-            [],
-
-        rideOtp:
-            customerRideOtp,
-
-        otpVerified:
-            false,
-
-        actualDistanceKm:
-            0,
-
-        extraDistanceKm:
-            0,
-
-        liveFare:
-            rate,
-
-        finalFare:
-            0,
-
-        finalDistanceKm:
-            0,
-
-        gpsLat:
-            null,
-
-        gpsLng:
-            null
-
-    };
-
-
-    console.log(
-        "🚕 RIDE DATA:",
-        rideData
-    );
-
-
-    let ridePromise;
-
 
     try {
+        const result = await confirmationResult.confirm(otp);
 
-        ridePromise =
-            db.collection("rides")
-                .add(rideData);
+        currentUser = {
+            uid: result.user.uid,
+            name: pending.name,
+            phone: pending.phone,
+            role: pending.role
+        };
 
+        localStorage.setItem("nvUserName", currentUser.name);
+        localStorage.setItem("nvUserRole", currentUser.role);
+        localStorage.setItem("nvUserPhone", currentUser.phone);
+
+        await openLoggedInApp();
+
+    } catch (error) {
+        console.error("OTP verification error:", error);
+        setText("otpMessage", "OTP verify nahi hua. OTP check karke dobara try karein.");
     }
+}
 
-    catch (error) {
+if (getElement("loginButton")) {
+    getElement("loginButton").addEventListener("click", login);
+}
 
-        console.error(
-            "❌ Firestore start error:",
-            error
-        );
+if (getElement("verifyOtpButton")) {
+    getElement("verifyOtpButton").addEventListener("click", verifyOTP);
+}
 
+/* ================= OPEN DASHBOARD ================= */
 
-        message.innerHTML =
-            "❌ Ride request failed.<br>" +
-            escapeRideText(
-                error.message ||
-                "Firebase error"
-            );
+async function openLoggedInApp() {
+    if (!currentUser) return;
 
+    selectedRole = currentUser.role;
+
+    setText("welcomeName", currentUser.name);
+    setText("profileName", currentUser.name);
+    setText("driverName", currentUser.name);
+
+    const phoneInput = getElement("loginPhone");
+    if (phoneInput) phoneInput.value = currentUser.phone;
+
+    stopAllListeners();
+    showHotelDashboard(false);
+
+    if (selectedRole === "driver") {
+        showScreen("driverApp");
+        startDriverDashboard();
         return;
     }
 
+    if (selectedRole === "hotel") {
+        showHotelDashboard(true);
+        startHotelDashboard();
+        return;
+    }
 
-    const timeoutPromise =
-        new Promise(function (_, reject) {
+    showScreen("customerApp");
+    openPage("homePage");
+    startCustomerRideListener();
+}
 
-            setTimeout(
-                function () {
+function restoreSavedLogin() {
+    /*
+       OTP bypass nahi kiya ja raha.
+       Saved details sirf form mein prefill hoti hain.
+       Har nayi login ke liye Firebase OTP zaroori hai.
+    */
+    const savedName = localStorage.getItem("nvUserName");
+    const savedPhone = localStorage.getItem("nvUserPhone");
 
-                    reject(
-                        new Error(
-                            "Firebase response nahi de raha. Firestore connection ya Security Rules check karein."
-                        )
-                    );
+    if (savedName && getElement("loginName")) {
+        getElement("loginName").value = savedName;
+    }
 
-                },
-                15000
-            );
+    if (savedPhone && getElement("loginPhone")) {
+        getElement("loginPhone").value = savedPhone.replace("+91", "");
+    }
+}
 
-        });
+restoreSavedLogin();
 
+/* ================= CUSTOMER NAVIGATION ================= */
 
-    Promise.race([
-        ridePromise,
-        timeoutPromise
-    ])
+function openPage(pageId) {
+    document.querySelectorAll("#customerApp .page").forEach(page => {
+        page.classList.toggle("active-page", page.id === pageId);
+    });
 
-    .then(function (docRef) {
+    const navPages = {
+        homePage: 0,
+        reelsPage: 1,
+        searchPage: 3,
+        profilePage: 4
+    };
 
-        console.log(
-            "🚕 RIDE CREATED SUCCESSFULLY:",
-            docRef.id
+    document.querySelectorAll("#customerApp .bottom-nav .nav-btn").forEach((button, index) => {
+        button.classList.toggle(navPages[pageId] === index, true);
+        button.classList.toggle(
+            "active",
+            navPages[pageId] === index
         );
+    });
+}
 
+function goHome() {
+    openPage("homePage");
+}
 
-        localStorage.setItem(
-            "nvCurrentRideId",
-            docRef.id
+function showSearch() {
+    openPage("searchPage");
+    getElement("searchInput")?.focus();
+}
+
+function showNotifications() {
+    showNotice("Aapki notifications yahan dikhengi jab app mein notifications enable hongi.");
+}
+
+function showMessage(message) {
+    showNotice(message + " ka section abhi connect nahi hai.");
+}
+
+function openMessages() {
+    showNotice("Messaging feature abhi connect nahi hai.");
+}
+
+/* ================= RIDE BOOKING ================= */
+
+async function requestRide() {
+    if (!currentUser || currentUser.role !== "customer") {
+        showNotice("Ride book karne ke liye Customer login karein.");
+        return;
+    }
+
+    const pickup = getElement("pickupLocation")?.value.trim();
+    const destination = getElement("destinationLocation")?.value.trim();
+    const vehicle = getElement("vehicleType")?.value;
+
+    if (!pickup || !destination || !vehicle) {
+        showNotice("Pickup, destination aur vehicle select karein.");
+        return;
+    }
+
+    const rate = VEHICLE_RATES[vehicle];
+
+    if (!rate) {
+        showNotice("Selected vehicle ki rate available nahi hai.");
+        return;
+    }
+
+    const button = document.querySelector("#ridePage .primary-btn");
+    if (button) button.disabled = true;
+
+    try {
+        const rideOtp = generateRideOTP();
+
+        const rideData = {
+            customerUid: currentUser.uid,
+            customerName: currentUser.name,
+            customerPhone: currentUser.phone,
+
+            pickup,
+            destination,
+            vehicle,
+            vehicleName: VEHICLE_NAMES[vehicle],
+            ratePerKm: rate,
+
+            fare: rate,
+            baseFare: rate,
+            liveFare: rate,
+            finalFare: null,
+
+            actualDistanceKm: 0,
+
+            status: "searching",
+            driverUid: "",
+            driverName: "",
+            driverPhone: "",
+            driverLat: null,
+            driverLng: null,
+
+            rideOtp,
+            otpVerified: false,
+
+            rejectedBy: [],
+
+            customerLat: null,
+            customerLng: null,
+
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        const doc = await db.collection("rides").add(rideData);
+
+        activeRideId = doc.id;
+        localStorage.setItem("nvCurrentRideId", doc.id);
+
+        setText(
+            "rideMessage",
+            "Ride request bhej di gayi hai. Nearby online drivers ka intezar karein."
         );
-
-
-        message.style.display =
-            "block";
-
-
-        message.innerHTML =
-            "🚕 Ride request created.<br>" +
-            "Searching for nearby drivers...";
-
 
         startCustomerRideListener();
 
-
-        alert(
-            "🚕 Ride request sent to nearby drivers."
-        );
-
-    })
-
-    .catch(function (error) {
-
-        console.error(
-            "❌ RIDE CREATION ERROR:",
-            error
-        );
-
-
-        message.style.display =
-            "block";
-
-
-        let errorMessage =
-            error &&
-            error.message
-                ? error.message
-                : "Unknown Firebase error";
-
-
-        if (
-            error &&
-            error.code ===
-                "permission-denied"
-        ) {
-
-            errorMessage =
-                "Firestore permission denied. Firebase Security Rules check karein.";
-
-        }
-
-
-        if (
-            error &&
-            error.code ===
-                "unavailable"
-        ) {
-
-            errorMessage =
-                "Firebase temporarily unavailable. Internet connection check karein.";
-
-        }
-
-
-        message.innerHTML =
-            "❌ Ride request failed.<br>" +
-            escapeRideText(
-                errorMessage
-            );
-
-    });
-
+    } catch (error) {
+        console.error("Ride booking error:", error);
+        showNotice("Ride book nahi hui. Firebase rules aur internet check karein.");
+    } finally {
+        if (button) button.disabled = false;
+    }
 }
 
-
-/* =========================================
-CUSTOMER RIDE STATUS LISTENER
-========================================= */
+/* ================= CUSTOMER RIDE LISTENER ================= */
 
 function startCustomerRideListener() {
-
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-        return;
+    if (customerRideUnsubscribe) {
+        customerRideUnsubscribe();
+        customerRideUnsubscribe = null;
     }
 
+    const rideId = activeRideId || localStorage.getItem("nvCurrentRideId");
+    if (!rideId || !currentUser || currentUser.role !== "customer") return;
 
-    const rideId =
-        localStorage.getItem(
-            "nvCurrentRideId"
-        );
+    activeRideId = rideId;
 
+    customerRideUnsubscribe = db.collection("rides")
+        .doc(rideId)
+        .onSnapshot(snapshot => {
+            if (!snapshot.exists) {
+                setText("rideMessage", "Ride request nahi mili.");
+                return;
+            }
 
-    if (!rideId) {
-        return;
-    }
-
-
-    if (customerRideListener) {
-
-        customerRideListener();
-
-        customerRideListener =
-            null;
-
-    }
-
-
-    customerRideListener =
-        db.collection("rides")
-            .doc(rideId)
-            .onSnapshot(
-
-                function (doc) {
-
-                    if (!doc.exists) {
-                        return;
-                    }
-
-
-                    const ride =
-                        doc.data();
-
-
-                    currentRide = {
-
-                        id:
-                            doc.id,
-
-                        ...ride
-
-                    };
-
-
-                    updateCustomerRideStatus(
-                        currentRide
-                    );
-
-                },
-
-                function (error) {
-
-                    console.error(
-                        "Customer ride listener error:",
-                        error
-                    );
-
-                }
-            );
-
+            const ride = snapshot.data();
+            updateCustomerRideStatus(ride);
+        }, error => {
+            console.error("Customer ride listener error:", error);
+            setText("rideMessage", "Ride status load nahi hua. Firebase rules check karein.");
+        });
 }
-
-
-/* =========================================
-CUSTOMER STATUS DISPLAY
-========================================= */
 
 function updateCustomerRideStatus(ride) {
+    currentRide = ride;
 
-    const message =
-        document.getElementById(
-            "rideMessage"
-        );
+    const box = getElement("rideMessage");
+    if (!box) return;
 
+    let html = "";
 
-    if (!message) {
-        return;
+    if (ride.status === "searching") {
+        html = `
+            <h3>🔎 Driver dhoondh rahe hain</h3>
+            <p><b>Pickup:</b> ${safeText(ride.pickup)}</p>
+            <p><b>Destination:</b> ${safeText(ride.destination)}</p>
+            <p><b>Vehicle:</b> ${safeText(ride.vehicleName)}</p>
+            <p><b>Rate:</b> ${formatMoney(ride.ratePerKm)}/km</p>
+            <p>Online driver ka intezar karein.</p>
+            <button onclick="cancelCustomerRide()">Cancel Ride</button>
+        `;
+    } else if (ride.status === "accepted" || ride.status === "driverComing") {
+        html = `
+            <h3>🚕 Driver mil gaya</h3>
+            <p><b>Driver:</b> ${safeText(ride.driverName || "Driver")}</p>
+            <p><b>Phone:</b> ${safeText(ride.driverPhone || "Not available")}</p>
+            <p><b>Vehicle:</b> ${safeText(ride.vehicleName)}</p>
+            <p><b>Pickup:</b> ${safeText(ride.pickup)}</p>
+            <p><b>Destination:</b> ${safeText(ride.destination)}</p>
+            <p><b>Rate:</b> ${formatMoney(ride.ratePerKm)}/km</p>
+            ${ride.status === "driverComing"
+                ? `<h2>Ride OTP: ${safeText(ride.rideOtp)}</h2>
+                   <p>Ye OTP driver ko tabhi batayein jab driver pickup par pahunch jaye.</p>`
+                : `<p>Driver aapke pickup par aa raha hai.</p>`}
+            ${ride.driverLat != null && ride.driverLng != null
+                ? `<p><a href="${makeCoordinateMapsUrl(ride.driverLat, ride.driverLng)}" target="_blank" rel="noopener">📍 Driver ki latest location Maps par dekhein</a></p>`
+                : ""}
+            <p><a href="${makeGoogleMapsUrl(ride.pickup)}" target="_blank" rel="noopener">Pickup location Maps mein kholein</a></p>
+        `;
+    } else if (ride.status === "started") {
+        const fare = ride.liveFare ?? ride.fare ?? ride.ratePerKm;
+
+        html = `
+            <h3>🟢 Ride chal rahi hai</h3>
+            <p><b>Driver:</b> ${safeText(ride.driverName || "Driver")}</p>
+            <p><b>Distance recorded:</b> ${(Number(ride.actualDistanceKm) || 0).toFixed(2)} km</p>
+            <h2>Estimated fare: ${formatMoney(fare)}</h2>
+            <p>Final fare ride complete hone par update hoga.</p>
+            ${ride.driverLat != null && ride.driverLng != null
+                ? `<p><a href="${makeCoordinateMapsUrl(ride.driverLat, ride.driverLng)}" target="_blank" rel="noopener">📍 Driver ki latest location Maps par dekhein</a></p>`
+                : ""}
+            <p><a href="${makeGoogleMapsUrl(ride.destination)}" target="_blank" rel="noopener">Destination Maps mein kholein</a></p>
+        `;
+    } else if (ride.status === "completed") {
+        html = `
+            <h3>✅ Ride complete ho gayi</h3>
+            <p><b>Distance:</b> ${(Number(ride.actualDistanceKm) || 0).toFixed(2)} km</p>
+            <h2>Final fare: ${formatMoney(ride.finalFare ?? ride.fare)}</h2>
+            <p>Thank you for travelling with NV Travelss.</p>
+            <button onclick="clearCustomerRide()">Book Another Ride</button>
+        `;
+    } else if (ride.status === "cancelled") {
+        html = `
+            <h3>Ride cancel ho gayi</h3>
+            <button onclick="clearCustomerRide()">Book Another Ride</button>
+        `;
+    } else {
+        html = `<p>Ride status: ${safeText(ride.status)}</p>`;
     }
 
+    box.innerHTML = html;
 
-    if (
-        ride.status === "searching"
-    ) {
-
-        message.style.display =
-            "block";
-
-
-        message.innerHTML =
-            "🚕 Ride request created.<br>" +
-            "Searching for nearby drivers...";
-
+    if (ride.status === "started") {
+        startCustomerLocationSharing(ride);
+    } else {
+        stopCustomerGps();
     }
-
-
-    else if (
-        ride.status === "accepted"
-    ) {
-
-        message.style.display =
-            "block";
-
-
-        message.innerHTML =
-            "✅ Driver accepted your ride.<br>" +
-
-            "Driver: " +
-            escapeRideText(
-                ride.driverName || "Driver"
-            ) +
-
-            "<br>" +
-
-            "Vehicle: " +
-            escapeRideText(
-                getVehicleName(
-                    ride.vehicle
-                )
-            ) +
-
-            "<br>" +
-
-            "Rate: ₹" +
-            (
-                ride.ratePerKm ||
-                getVehicleRate(
-                    ride.vehicle
-                )
-            ) +
-            "/km" +
-
-            "<br>" +
-
-            "Pickup: " +
-            escapeRideText(
-                ride.pickup
-            ) +
-
-            "<br>" +
-
-            "Destination: " +
-            escapeRideText(
-                ride.destination
-            ) +
-
-            "<br><br>" +
-
-            "<b>🚗 Driver is coming to you.</b>";
-
-    }
-
-
-    else if (
-        ride.status === "driverComing"
-    ) {
-
-        message.style.display =
-            "block";
-
-
-        message.innerHTML =
-            "🚗 Driver is coming to your pickup location.<br>" +
-
-            "Driver: " +
-            escapeRideText(
-                ride.driverName || "Driver"
-            ) +
-
-            "<br>" +
-
-            "Vehicle: " +
-            escapeRideText(
-                getVehicleName(
-                    ride.vehicle
-                )
-            ) +
-
-            "<br><br>" +
-
-            "<b>🔐 Your Ride OTP</b><br>" +
-
-            "<strong style=\"font-size:28px;\">" +
-            escapeRideText(
-                ride.rideOtp
-            ) +
-            "</strong><br>" +
-
-            "Driver ke paas pahunchne par ye OTP bataye.";
-
-    }
-
-
-    else if (
-        ride.status === "started"
-    ) {
-
-        message.style.display =
-            "block";
-
-
-        const distance =
-            Number(
-                ride.actualDistanceKm || 0
-            ).toFixed(2);
-
-
-        const fare =
-            Number(
-                ride.liveFare ||
-                ride.ratePerKm ||
-                getVehicleRate(
-                    ride.vehicle
-                )
-            ).toFixed(2);
-
-
-        message.innerHTML =
-            "🚕 <b>Ride Started</b><br>" +
-
-            "Driver: " +
-            escapeRideText(
-                ride.driverName || "Driver"
-            ) +
-
-            "<br>" +
-
-            "📍 Live Distance: " +
-            distance +
-            " km" +
-
-            "<br>" +
-
-            "💰 Live Fare: ₹" +
-            fare +
-
-            "<br><br>" +
-
-            "GPS tracking active.";
-
-        startCustomerGpsTracking(
-            ride
-        );
-
-    }
-
-
-    else if (
-        ride.status === "completed"
-    ) {
-
-        stopCustomerGpsTracking();
-
-
-        message.style.display =
-            "block";
-
-
-        const distance =
-            Number(
-                ride.finalDistanceKm ||
-                ride.actualDistanceKm ||
-                0
-            ).toFixed(2);
-
-
-        const fare =
-            Number(
-                ride.finalFare ||
-                ride.liveFare ||
-                ride.fare ||
-                0
-            ).toFixed(2);
-
-
-        message.innerHTML =
-            "✅ <b>Ride Completed</b><br><br>" +
-
-            "📍 Total Distance: " +
-            distance +
-            " km" +
-
-            "<br>" +
-
-            "💰 <b>Final Fare: ₹" +
-            fare +
-            "</b><br><br>" +
-
-            "Thank you for travelling with NV Travelss.";
-
-    }
-
-
-    else if (
-        ride.status === "rejected"
-    ) {
-
-        message.style.display =
-            "block";
-
-
-        message.innerHTML =
-            "❌ Ride request was rejected.<br>" +
-            "You can request another ride.";
-
-    }
-
 }
 
+async function cancelCustomerRide() {
+    if (!activeRideId || !currentRide) return;
 
-/* =========================================
-DRIVER RIDE LISTENER
-MULTIPLE PENDING RIDES
-========================================= */
-
-function startDriverRideListener() {
-
-    if (!driverOnline) {
-
-        console.log(
-            "Driver is offline. Ride listener not started."
-        );
-
+    if (!["searching", "accepted", "driverComing"].includes(currentRide.status)) {
+        showNotice("Is stage par ride cancel nahi kar sakte.");
         return;
     }
 
+    try {
+        await db.collection("rides").doc(activeRideId).update({
+            status: "cancelled",
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-
-        console.error(
-            "Firebase database not connected."
-        );
-
-        return;
+        stopCustomerGps();
+    } catch (error) {
+        console.error(error);
+        showNotice("Ride cancel nahi hui.");
     }
-
-
-    if (driverRideListener) {
-
-        driverRideListener();
-
-        driverRideListener =
-            null;
-
-    }
-
-
-    const driverPhone =
-        localStorage.getItem(
-            "nvUserPhone"
-        ) || "";
-
-
-    console.log(
-        "🚕 DRIVER LISTENER STARTED"
-    );
-
-
-    console.log(
-        "🚕 Driver phone:",
-        driverPhone
-    );
-
-
-    driverRideListener =
-        db.collection("rides")
-            .where(
-                "status",
-                "==",
-                "searching"
-            )
-            .onSnapshot(
-
-                function (snapshot) {
-
-                    console.log(
-                        "🚕 Searching rides found:",
-                        snapshot.size
-                    );
-
-
-                    let rides = [];
-
-
-                    snapshot.forEach(
-                        function (doc) {
-
-                            const data =
-                                doc.data();
-
-
-                            const rejectedBy =
-                                Array.isArray(
-                                    data.rejectedBy
-                                )
-                                    ? data.rejectedBy
-                                    : [];
-
-
-                            if (
-                                driverPhone &&
-                                rejectedBy.indexOf(
-                                    driverPhone
-                                ) !== -1
-                            ) {
-
-                                return;
-
-                            }
-
-
-                            rides.push({
-
-                                id:
-                                    doc.id,
-
-                                ...data
-
-                            });
-
-                        }
-                    );
-
-
-                    rides.sort(
-                        function (a, b) {
-
-                            const timeA =
-                                getRideTime(
-                                    a.createdAt
-                                );
-
-
-                            const timeB =
-                                getRideTime(
-                                    b.createdAt
-                                );
-
-
-                            return timeB - timeA;
-
-                        }
-                    );
-
-
-                    driverPendingRides =
-                        {};
-
-
-                    rides.forEach(
-                        function (ride) {
-
-                            driverPendingRides[
-                                ride.id
-                            ] = ride;
-
-                        }
-                    );
-
-
-                    if (activeRideId) {
-
-                        updateRequestBadge(
-                            rides.length
-                        );
-
-                        return;
-
-                    }
-
-
-                    if (rides.length === 0) {
-
-                        pendingRide =
-                            false;
-
-                        currentRide =
-                            null;
-
-                        showNoRideRequest();
-
-                        updateRequestBadge(0);
-
-                        return;
-
-                    }
-
-
-                    pendingRide =
-                        true;
-
-
-                    currentRide =
-                        rides[0];
-
-
-                    console.log(
-                        "🚕 PENDING RIDES:",
-                        rides
-                    );
-
-
-                    showDriverRideRequests(
-                        rides
-                    );
-
-
-                    updateRequestBadge(
-                        rides.length
-                    );
-
-                },
-
-                function (error) {
-
-                    console.error(
-                        "❌ DRIVER RIDE LISTENER ERROR:",
-                        error
-                    );
-
-
-                    showNoRideRequest();
-
-                }
-            );
-
 }
 
+function clearCustomerRide() {
+    stopCustomerGps();
 
-/* =========================================
-RIDE TIME HELPER
-========================================= */
-
-function getRideTime(value) {
-
-    if (!value) {
-        return 0;
+    if (customerRideUnsubscribe) {
+        customerRideUnsubscribe();
+        customerRideUnsubscribe = null;
     }
 
+    activeRideId = null;
+    currentRide = null;
 
-    if (
-        typeof value.toMillis ===
-        "function"
-    ) {
+    localStorage.removeItem("nvCurrentRideId");
+    setText("rideMessage", "");
 
-        return value.toMillis();
-
-    }
-
-
-    if (
-        value instanceof Date
-    ) {
-
-        return value.getTime();
-
-    }
-
-
-    if (
-        typeof value === "string"
-    ) {
-
-        const time =
-            new Date(value).getTime();
-
-        return isNaN(time)
-            ? 0
-            : time;
-
-    }
-
-
-    return 0;
-
+    if (getElement("pickupLocation")) getElement("pickupLocation").value = "";
+    if (getElement("destinationLocation")) getElement("destinationLocation").value = "";
+    if (getElement("vehicleType")) getElement("vehicleType").value = "";
 }
 
+/* ================= CUSTOMER GPS ================= */
 
-/* =========================================
-DRIVER MULTIPLE RIDE REQUEST UI
-========================================= */
+function startCustomerLocationSharing(ride) {
+    if (!navigator.geolocation || !activeRideId) return;
+    if (customerGpsWatchId !== null) return;
 
-function showDriverRideRequests(rides) {
+    customerGpsWatchId = navigator.geolocation.watchPosition(
+        position => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
 
-    if (!rides || rides.length === 0) {
-
-        showNoRideRequest();
-
-        return;
-    }
-
-
-    const driverApp =
-        document.getElementById(
-            "driverApp"
-        );
-
-
-    if (!driverApp) {
-        return;
-    }
-
-
-    let container =
-        document.getElementById(
-            "liveRideRequests"
-        );
-
-
-    if (!container) {
-
-        container =
-            document.createElement(
-                "div"
-            );
-
-        container.id =
-            "liveRideRequests";
-
-        driverApp.prepend(
-            container
-        );
-
-    }
-
-
-    container.innerHTML = "";
-
-
-    rides.forEach(
-        function (ride) {
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-
-            card.className =
-                "live-ride-request-card";
-
-
-            card.id =
-                "liveRideRequest-" +
-                ride.id;
-
-
-            card.style.padding =
-                "18px";
-
-            card.style.margin =
-                "15px 0";
-
-            card.style.borderRadius =
-                "16px";
-
-            card.style.background =
-                "#ffffff";
-
-            card.style.boxShadow =
-                "0 4px 15px rgba(0,0,0,0.12)";
-
-
-            card.innerHTML =
-
-                "<h3>🚕 New Ride Request</h3>" +
-
-                "<p><b>Customer:</b> " +
-                escapeRideText(
-                    ride.customerName
-                ) +
-                "</p>" +
-
-                "<p><b>Pickup:</b> " +
-                escapeRideText(
-                    ride.pickup
-                ) +
-                "</p>" +
-
-                "<p><b>Destination:</b> " +
-                escapeRideText(
-                    ride.destination
-                ) +
-                "</p>" +
-
-                "<p><b>Vehicle:</b> " +
-                escapeRideText(
-                    getVehicleName(
-                        ride.vehicle
-                    )
-                ) +
-                "</p>" +
-
-                "<p><b>Rate:</b> ₹" +
-                (
-                    ride.ratePerKm ||
-                    getVehicleRate(
-                        ride.vehicle
-                    )
-                ) +
-                "/km</p>" +
-
-                "<p><b>Fare:</b> " +
-                "Distance ke according calculate hoga." +
-                "</p>" +
-
-                "<button onclick=\"acceptSpecificRide('" +
-                escapeRideText(
-                    ride.id
-                ) +
-                "')\" " +
-                "style=\"margin-right:8px;padding:12px 18px;\">" +
-                "ACCEPT RIDE" +
-                "</button>" +
-
-                "<button onclick=\"rejectSpecificRide('" +
-                escapeRideText(
-                    ride.id
-                ) +
-                "')\" " +
-                "style=\"padding:12px 18px;\">" +
-                "REJECT" +
-                "</button>";
-
-
-            container.appendChild(
-                card
-            );
-
+            db.collection("rides").doc(activeRideId).update({
+                customerLat: lat,
+                customerLng: lng,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(error => console.error("Customer GPS update error:", error));
+        },
+        error => {
+            console.warn("Customer GPS unavailable:", error.message);
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 5000,
+            timeout: 15000
         }
     );
-
 }
 
+function stopCustomerGps() {
+    if (customerGpsWatchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(customerGpsWatchId);
+    }
 
-/* =========================================
-OLD SINGLE RIDE UI COMPATIBILITY
-========================================= */
+    customerGpsWatchId = null;
+}
 
-function showDriverRideRequest(ride) {
+/* ================= DRIVER DASHBOARD ================= */
 
-    if (!ride) {
+function startDriverDashboard() {
+    if (!currentUser || currentUser.role !== "driver") return;
+
+    setText("driverStatusText", driverOnline ? "Online" : "Offline");
+    setText("driverEarnings", formatMoney(driverEarnings));
+    setText("driverRides", String(driverRides));
+
+    listenForRideRequests();
+    listenForDriverActiveRides();
+}
+
+async function toggleDriverStatus() {
+    if (!currentUser || currentUser.role !== "driver") {
+        showNotice("Driver login karein.");
         return;
     }
 
+    driverOnline = !driverOnline;
 
-    showDriverRideRequests([
-        ride
-    ]);
+    setText("driverStatusText", driverOnline ? "Online" : "Offline");
 
+    const button = getElement("onlineButton");
+    if (button) {
+        button.textContent = driverOnline ? "GO OFFLINE" : "GO ONLINE";
+    }
+
+    if (driverOnline) {
+        listenForRideRequests();
+        listenForDriverActiveRides();
+    } else {
+        if (driverRequestsUnsubscribe) {
+            driverRequestsUnsubscribe();
+            driverRequestsUnsubscribe = null;
+        }
+
+        stopDriverGps();
+    }
 }
 
+function listenForRideRequests() {
+    if (!driverOnline || !currentUser) return;
 
-/* =========================================
-NO RIDE REQUEST
-========================================= */
+    if (driverRequestsUnsubscribe) {
+        driverRequestsUnsubscribe();
+    }
 
-function showNoRideRequest() {
+    driverRequestsUnsubscribe = db.collection("rides")
+        .where("status", "==", "searching")
+        .onSnapshot(snapshot => {
+            const requests = [];
 
-    let container =
-        document.getElementById(
-            "liveRideRequests"
-        );
+            snapshot.forEach(doc => {
+                const ride = doc.data();
 
+                if (ride.customerPhone === currentUser.phone) return;
 
-    if (!container) {
+                const rejectedBy = Array.isArray(ride.rejectedBy) ? ride.rejectedBy : [];
+                if (rejectedBy.includes(currentUser.phone)) return;
 
-        const driverApp =
-            document.getElementById(
-                "driverApp"
-            );
+                requests.push({ id: doc.id, ...ride });
+            });
 
+            renderRideRequests(requests);
+        }, error => {
+            console.error("Driver requests listener error:", error);
+            setText("liveRideRequest", "Ride requests load nahi hui. Firebase rules/index check karein.");
+        });
+}
 
-        if (!driverApp) {
+function renderRideRequests(requests) {
+    const box = getElement("liveRideRequest");
+    if (!box) return;
+
+    setText("requestBadge", String(requests.length));
+
+    if (!requests.length) {
+        box.innerHTML = "<p>🚕 No new ride requests.</p>";
+        return;
+    }
+
+    box.innerHTML = requests.map(ride => `
+        <div class="ride-request-card" style="padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:12px;">
+            <h3>🚕 New Ride</h3>
+            <p><b>Customer:</b> ${safeText(ride.customerName || "Customer")}</p>
+            <p><b>Pickup:</b> ${safeText(ride.pickup)}</p>
+            <p><b>Destination:</b> ${safeText(ride.destination)}</p>
+            <p><b>Vehicle:</b> ${safeText(ride.vehicleName)}</p>
+            <p><b>Rate:</b> ${formatMoney(ride.ratePerKm)}/km</p>
+            <button onclick="acceptRide('${ride.id}')">Accept Ride</button>
+            <button onclick="rejectRide('${ride.id}')">Reject</button>
+        </div>
+    `).join("");
+}
+
+async function acceptRide(rideId) {
+    if (!driverOnline || !currentUser) {
+        showNotice("Pehle GO ONLINE karein.");
+        return;
+    }
+
+    try {
+        await db.runTransaction(async transaction => {
+            const ref = db.collection("rides").doc(rideId);
+            const snapshot = await transaction.get(ref);
+
+            if (!snapshot.exists) throw new Error("Ride nahi mili.");
+
+            const ride = snapshot.data();
+
+            if (ride.status !== "searching") {
+                throw new Error("Ye ride kisi aur driver ne accept kar li.");
+            }
+
+            const rejectedBy = Array.isArray(ride.rejectedBy) ? ride.rejectedBy : [];
+            if (rejectedBy.includes(currentUser.phone)) {
+                throw new Error("Aapne ye ride pehle reject ki thi.");
+            }
+
+            transaction.update(ref, {
+                status: "accepted",
+                driverUid: currentUser.uid,
+                driverName: currentUser.name,
+                driverPhone: currentUser.phone,
+                driverLat: null,
+                driverLng: null,
+                acceptedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+
+        activeRideId = rideId;
+        lastDriverPosition = null;
+        driverDistanceKm = 0;
+
+        showNotice("Ride accept ho gayi. Pickup par pahunchkar 'Arrived' dabayein.");
+        listenForDriverActiveRides();
+        startDriverGps();
+
+    } catch (error) {
+        console.error("Accept ride error:", error);
+        showNotice(error.message || "Ride accept nahi hui.");
+    }
+}
+
+async function rejectRide(rideId) {
+    if (!currentUser) return;
+
+    try {
+        await db.collection("rides").doc(rideId).update({
+            rejectedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.phone),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+        console.error("Reject ride error:", error);
+        showNotice("Ride reject nahi hui.");
+    }
+}
+
+/* ================= DRIVER ACTIVE RIDE ================= */
+
+function listenForDriverActiveRides() {
+    if (!currentUser) return;
+
+    if (driverActiveUnsubscribe) {
+        driverActiveUnsubscribe();
+        driverActiveUnsubscribe = null;
+    }
+
+    driverActiveUnsubscribe = db.collection("rides")
+        .where("driverPhone", "==", currentUser.phone)
+        .onSnapshot(snapshot => {
+            const active = [];
+
+            snapshot.forEach(doc => {
+                const ride = doc.data();
+
+                if (ACTIVE_RIDE_STATUSES.includes(ride.status)) {
+                    active.push({ id: doc.id, ...ride });
+                }
+            });
+
+            renderDriverActiveRides(active);
+        }, error => {
+            console.error("Driver active ride error:", error);
+        });
+}
+
+function renderDriverActiveRides(rides) {
+    const box = getElement("liveRideRequest");
+    if (!box) return;
+
+    const active = rides.find(ride => ACTIVE_RIDE_STATUSES.includes(ride.status));
+
+    if (!active) {
+        if (!driverOnline) {
+            box.innerHTML = "<p>Driver offline hai. GO ONLINE karke requests dekhein.</p>";
+        }
+        return;
+    }
+
+    currentRide = active;
+    activeRideId = active.id;
+
+    let action = "";
+
+    if (active.status === "accepted") {
+        action = `<button onclick="driverComingToCustomer('${active.id}')">📍 Arrived at Pickup</button>`;
+    } else if (active.status === "driverComing") {
+        action = `
+            <p>Customer se ride OTP lein.</p>
+            <input id="driverRideOtpInput" inputmode="numeric" maxlength="4" placeholder="Customer Ride OTP">
+            <button onclick="verifyRideOtpAndStart('${active.id}')">Verify OTP & Start</button>
+        `;
+    } else if (active.status === "started") {
+        action = `
+            <p>Ride chal rahi hai.</p>
+            <p>Distance: ${(Number(active.actualDistanceKm) || 0).toFixed(2)} km</p>
+            <p>Estimated fare: ${formatMoney(active.liveFare ?? active.fare)}</p>
+            <button onclick="openDestinationMaps('${active.id}')">Navigate to Destination</button>
+            <button onclick="completeCurrentRide('${active.id}')">Complete Ride</button>
+        `;
+    }
+
+    box.innerHTML = `
+        <div class="ride-request-card" style="padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:12px;">
+            <h3>🟢 Your Active Ride</h3>
+            <p><b>Status:</b> ${safeText(active.status)}</p>
+            <p><b>Customer:</b> ${safeText(active.customerName || "Customer")}</p>
+            <p><b>Customer Phone:</b> ${safeText(active.customerPhone || "")}</p>
+            <p><b>Pickup:</b> ${safeText(active.pickup)}</p>
+            <p><b>Destination:</b> ${safeText(active.destination)}</p>
+            <p><b>Vehicle:</b> ${safeText(active.vehicleName)}</p>
+            <p><b>Rate:</b> ${formatMoney(active.ratePerKm)}/km</p>
+            <p><a href="${makeGoogleMapsUrl(active.status === "started" ? active.destination : active.pickup)}" target="_blank" rel="noopener">Open Google Maps Navigation</a></p>
+            ${action}
+        </div>
+    `;
+
+    if (active.status === "accepted" || active.status === "driverComing" || active.status === "started") {
+        startDriverGps();
+    }
+}
+
+async function driverComingToCustomer(rideId) {
+    if (!currentUser) return;
+
+    try {
+        await db.collection("rides").doc(rideId).update({
+            status: "driverComing",
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showNotice("Customer ki screen par Ride OTP dikh jayega. Customer se OTP lein.");
+    } catch (error) {
+        console.error(error);
+        showNotice("Ride status update nahi hua.");
+    }
+}
+
+async function verifyRideOtpAndStart(rideId) {
+    const input = getElement("driverRideOtpInput");
+    const enteredOtp = input?.value.trim();
+
+    if (!/^\d{4}$/.test(enteredOtp || "")) {
+        showNotice("Customer ka 4-digit Ride OTP enter karein.");
+        return;
+    }
+
+    try {
+        await db.runTransaction(async transaction => {
+            const ref = db.collection("rides").doc(rideId);
+            const snapshot = await transaction.get(ref);
+
+            if (!snapshot.exists) throw new Error("Ride nahi mili.");
+
+            const ride = snapshot.data();
+
+            if (ride.driverPhone !== currentUser.phone) {
+                throw new Error("Ye ride aapko assign nahi hai.");
+            }
+
+            if (ride.status !== "driverComing") {
+                throw new Error("Ride ab OTP verification ke liye ready nahi hai.");
+            }
+
+            if (String(ride.rideOtp) !== enteredOtp) {
+                throw new Error("OTP galat hai. Customer ki screen wala OTP enter karein.");
+            }
+
+            transaction.update(ref, {
+                status: "started",
+                otpVerified: true,
+                startedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                actualDistanceKm: 0,
+                liveFare: Number(ride.ratePerKm) || 0,
+                fare: Number(ride.ratePerKm) || 0
+            });
+        });
+
+        lastDriverPosition = null;
+        driverDistanceKm = 0;
+        startDriverGps();
+
+        showNotice("OTP verified. Ride start ho gayi.");
+
+    } catch (error) {
+        console.error("Ride OTP error:", error);
+        showNotice(error.message || "OTP verification fail hui.");
+    }
+}
+
+function openDestinationMaps(rideId) {
+    const destination = currentRide?.destination;
+
+    if (destination) {
+        window.open(makeGoogleMapsUrl(destination), "_blank", "noopener");
+        return;
+    }
+
+    db.collection("rides").doc(rideId).get().then(snapshot => {
+        if (snapshot.exists) {
+            window.open(makeGoogleMapsUrl(snapshot.data().destination), "_blank", "noopener");
+        }
+    }).catch(console.error);
+}
+
+/* ================= DRIVER GPS + FARE ================= */
+
+function startDriverGps() {
+    if (!navigator.geolocation || driverGpsWatchId !== null || !currentUser) return;
+
+    driverGpsWatchId = navigator.geolocation.watchPosition(
+        async position => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            if (!activeRideId) return;
+
+            const currentPosition = { lat, lng };
+
+            if (lastDriverPosition && currentRide?.status === "started") {
+                const moved = haversineKm(lastDriverPosition, currentPosition);
+
+                // Bahut bada GPS jump ignore karein.
+                if (moved >= 0 && moved < 1) {
+                    driverDistanceKm += moved;
+                }
+            }
+
+            lastDriverPosition = currentPosition;
+
+            const rideRef = db.collection("rides").doc(activeRideId);
+
+            try {
+                const snapshot = await rideRef.get();
+                if (!snapshot.exists) return;
+
+                const ride = snapshot.data();
+
+                if (ride.driverPhone !== currentUser.phone) return;
+
+                const rate = Number(ride.ratePerKm) || 0;
+                const fare = Math.max(rate, driverDistanceKm * rate);
+
+                await rideRef.update({
+                    driverLat: lat,
+                    driverLng: lng,
+                    actualDistanceKm: driverDistanceKm,
+                    liveFare: fare,
+                    fare: fare,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+            } catch (error) {
+                console.warn("Driver GPS Firestore update error:", error);
+            }
+        },
+        error => {
+            console.warn("Driver GPS unavailable:", error.message);
+
+            if (error.code === 1) {
+                showNotice("Driver GPS permission allow karein, tabhi location update hogi.");
+            }
+        },
+        {
+            enableHighAccuracy: true,
+            maximumAge: 3000,
+            timeout: 15000
+        }
+    );
+}
+
+function stopDriverGps() {
+    if (driverGpsWatchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(driverGpsWatchId);
+    }
+
+    driverGpsWatchId = null;
+    lastDriverPosition = null;
+}
+
+/* ================= COMPLETE RIDE ================= */
+
+async function completeCurrentRide(rideId = activeRideId) {
+    if (!rideId || !currentUser) {
+        showNotice("Active ride nahi mili.");
+        return;
+    }
+
+    try {
+        const ref = db.collection("rides").doc(rideId);
+        const snapshot = await ref.get();
+
+        if (!snapshot.exists) {
+            showNotice("Ride nahi mili.");
             return;
         }
 
-
-        container =
-            document.createElement(
-                "div"
-            );
-
-        container.id =
-            "liveRideRequests";
-
-        driverApp.prepend(
-            container
-        );
-
-    }
-
-
-    container.innerHTML =
-        "<div id=\"liveRideRequest\" " +
-        "style=\"padding:18px;margin:15px 0;\">" +
-        "<p>🚕 No new ride requests.</p>" +
-        "</div>";
-
-}
-
-
-/* =========================================
-REQUEST BADGE
-========================================= */
-
-function updateRequestBadge(count) {
-
-    const badge =
-        document.getElementById(
-            "requestBadge"
-        );
-
-
-    if (badge) {
-
-        badge.textContent =
-            count;
-
-    }
-
-}
-
-
-/* =========================================
-ACCEPT SPECIFIC RIDE
-========================================= */
-
-function acceptSpecificRide(rideId) {
-
-    if (acceptingRide) {
-        return;
-    }
-
-
-    if (!driverOnline) {
-
-        alert(
-            "Please GO ONLINE first."
-        );
-
-        return;
-    }
-
-
-    if (activeRideId) {
-
-        alert(
-            "Pehle active ride complete karein."
-        );
-
-        return;
-    }
-
-
-    if (!rideId) {
-
-        alert(
-            "No ride selected."
-        );
-
-        return;
-    }
-
-
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-
-        alert(
-            "Firebase database is not connected."
-        );
-
-        return;
-    }
-
-
-    acceptingRide =
-        true;
-
-
-    const driverName =
-        localStorage.getItem(
-            "nvUserName"
-        ) || "Driver";
-
-
-    const driverPhone =
-        localStorage.getItem(
-            "nvUserPhone"
-        ) || "";
-
-
-    const rideRef =
-        db.collection("rides")
-            .doc(rideId);
-
-
-    const card =
-        document.getElementById(
-            "liveRideRequest-" +
-            rideId
-        );
-
-
-    if (card) {
-
-        const buttons =
-            card.querySelectorAll(
-                "button"
-            );
-
-
-        buttons.forEach(
-            function (button) {
-
-                button.disabled =
-                    true;
-
-            }
-        );
-
-    }
-
-
-    db.runTransaction(
-        function (transaction) {
-
-            return transaction
-                .get(rideRef)
-
-                .then(
-                    function (doc) {
-
-                        if (!doc.exists) {
-
-                            throw new Error(
-                                "Ride does not exist."
-                            );
-
-                        }
-
-
-                        const ride =
-                            doc.data();
-
-
-                        if (
-                            ride.status !==
-                            "searching"
-                        ) {
-
-                            throw new Error(
-                                "Ride is no longer available."
-                            );
-
-                        }
-
-
-                        const rejectedBy =
-                            Array.isArray(
-                                ride.rejectedBy
-                            )
-                                ? ride.rejectedBy
-                                : [];
-
-
-                        if (
-                            driverPhone &&
-                            rejectedBy.indexOf(
-                                driverPhone
-                            ) !== -1
-                        ) {
-
-                            throw new Error(
-                                "You already rejected this ride."
-                            );
-
-                        }
-
-
-                        transaction.update(
-                            rideRef,
-                            {
-
-                                status:
-                                    "accepted",
-
-                                driverName:
-                                    driverName,
-
-                                driverPhone:
-                                    driverPhone,
-
-                                acceptedBy:
-                                    driverPhone,
-
-                                acceptedAt:
-                                    firebase.firestore
-                                        .FieldValue
-                                        .serverTimestamp()
-
-                            }
-                        );
-
-
-                        return {
-                            ...ride,
-                            id:
-                                doc.id
-                        };
-
-                    }
-                );
-
-        }
-    )
-
-    .then(
-        function (ride) {
-
-            activeRideId =
-                rideId;
-
-
-            currentRide = {
-
-                ...ride,
-
-                id:
-                    rideId,
-
-                status:
-                    "accepted",
-
-                driverName:
-                    driverName,
-
-                driverPhone:
-                    driverPhone,
-
-                acceptedBy:
-                    driverPhone
-
-            };
-
-
-            driverRides++;
-
-
-            const ridesElement =
-                document.getElementById(
-                    "driverRides"
-                );
-
-
-            const earningsElement =
-                document.getElementById(
-                    "driverEarnings"
-                );
-
-
-            if (ridesElement) {
-
-                ridesElement.textContent =
-                    driverRides;
-
-            }
-
-
-            if (earningsElement) {
-
-                earningsElement.textContent =
-                    "₹" +
-                    driverEarnings;
-
-            }
-
-
-            pendingRide =
-                false;
-
-
-            showAcceptedDriverRide(
-                currentRide
-            );
-
-
-            updateRequestBadge(0);
-
-
-            /*
-               ACCEPT ke baad pickup navigation
-               open karne ki koshish.
-               Agar browser popup block kare,
-               to screen par Navigate button
-               available rahega.
-            */
-
-            openPickupNavigation(
-                currentRide,
-                true
-            );
-
-
-            alert(
-                "🚕 Ride accepted successfully! Pickup ke liye Google Maps open kiya ja raha hai."
-            );
-
-        }
-    )
-
-    .catch(
-        function (error) {
-
-            console.error(
-                "❌ ACCEPT RIDE ERROR:",
-                error
-            );
-
-
-            if (card) {
-
-                const buttons =
-                    card.querySelectorAll(
-                        "button"
-                    );
-
-
-                buttons.forEach(
-                    function (button) {
-
-                        button.disabled =
-                            false;
-
-                    }
-                );
-
-            }
-
-
-            alert(
-                "Ride accept nahi hui: " +
-                error.message
-            );
-
-        }
-    )
-
-    .finally(
-        function () {
-
-            acceptingRide =
-                false;
-
-        }
-    );
-
-}
-
-
-/* =========================================
-ACCEPT LIVE RIDE - COMPATIBILITY
-========================================= */
-
-function acceptLiveRide() {
-
-    if (
-        currentRide &&
-        currentRide.id
-    ) {
-
-        acceptSpecificRide(
-            currentRide.id
-        );
-
-        return;
-    }
-
-
-    alert(
-        "No ride request available."
-    );
-
-}
-
-
-/* =========================================
-GOOGLE MAPS - PICKUP NAVIGATION
-========================================= */
-
-function openPickupNavigation(
-    ride,
-    autoOpen
-) {
-
-    if (
-        !ride ||
-        !ride.pickup
-    ) {
-
-        alert(
-            "Customer pickup location available nahi hai."
-        );
-
-        return;
-    }
-
-
-    const pickup =
-        String(
-            ride.pickup
-        ).trim();
-
-
-    if (!pickup) {
-
-        alert(
-            "Customer pickup location available nahi hai."
-        );
-
-        return;
-    }
-
-
-    const mapsUrl =
-        "https://www.google.com/maps/dir/?api=1&destination=" +
-        encodeURIComponent(
-            pickup
-        ) +
-        "&travelmode=driving";
-
-
-    console.log(
-        "📍 PICKUP NAVIGATION:",
-        mapsUrl
-    );
-
-
-    if (autoOpen) {
-
-        try {
-
-            const opened =
-                window.open(
-                    mapsUrl,
-                    "_blank"
-                );
-
-
-            /*
-               Kuch mobile browsers popup block
-               kar sakte hain. Button phir bhi
-               screen par available rahega.
-            */
-
-            if (!opened) {
-
-                console.log(
-                    "Google Maps popup blocked. Use Navigate button."
-                );
-
-            }
-
+        const ride = snapshot.data();
+
+        if (ride.driverPhone !== currentUser.phone) {
+            showNotice("Ye ride aapko assign nahi hai.");
+            return;
         }
 
-        catch (error) {
-
-            console.error(
-                "Pickup Maps open error:",
-                error
-            );
-
+        if (ride.status !== "started" || ride.otpVerified !== true) {
+            showNotice("Ride complete karne se pehle OTP se start karein.");
+            return;
         }
 
+        const distance = Number(ride.actualDistanceKm) || 0;
+        const rate = Number(ride.ratePerKm) || 0;
+        const finalFare = Math.max(rate, distance * rate);
+
+        await ref.update({
+            status: "completed",
+            actualDistanceKm: distance,
+            finalFare,
+            fare: finalFare,
+            liveFare: finalFare,
+            completedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        driverRides += 1;
+        driverEarnings += finalFare;
+
+        setText("driverEarnings", formatMoney(driverEarnings));
+        setText("driverRides", String(driverRides));
+
+        stopDriverGps();
+
+        activeRideId = null;
+        currentRide = null;
+        lastDriverPosition = null;
+        driverDistanceKm = 0;
+
+        showNotice("Ride complete ho gayi. Final fare: " + formatMoney(finalFare));
+
+    } catch (error) {
+        console.error("Complete ride error:", error);
+        showNotice("Ride complete nahi hui. Firebase rules check karein.");
     }
-
-
-    return mapsUrl;
-
 }
 
+/* ================= DRIVER PASS ================= */
 
-/* =========================================
-GOOGLE MAPS - DESTINATION NAVIGATION
-========================================= */
-
-function openDestinationNavigation(
-    ride,
-    autoOpen
-) {
-
-    if (
-        !ride ||
-        !ride.destination
-    ) {
-
-        alert(
-            "Customer destination available nahi hai."
-        );
-
+async function activatePass() {
+    if (!currentUser || currentUser.role !== "driver") {
+        showNotice("Driver login karein.");
         return;
     }
 
+    const confirmed = confirm("₹75 ka 24-hour Driver Pass activate karna hai? Abhi automatic payment gateway connected nahi hai.");
 
-    const destination =
-        String(
-            ride.destination
-        ).trim();
+    if (!confirmed) return;
 
+    /*
+       Abhi yeh demo activation hai.
+       Real paid pass ke liye verified payment gateway/server required hai.
+    */
+    driverPassActiveUntil = Date.now() + 24 * 60 * 60 * 1000;
 
-    if (!destination) {
+    setText("passStatus", "Active — 24 Hours");
 
-        alert(
-            "Customer destination available nahi hai."
-        );
-
-        return;
+    try {
+        await db.collection("driverPasses").doc(currentUser.uid).set({
+            driverUid: currentUser.uid,
+            driverPhone: currentUser.phone,
+            price: 75,
+            status: "demo-active",
+            activatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            expiresAt: new Date(driverPassActiveUntil)
+        }, { merge: true });
+    } catch (error) {
+        console.warn("Driver pass save error:", error);
     }
 
+    showNotice("Demo pass active dikh raha hai, lekin ₹75 ka real payment abhi collect nahi hua.");
+}
 
-    const mapsUrl =
-        "https://www.google.com/maps/dir/?api=1&destination=" +
-        encodeURIComponent(
-            destination
-        ) +
-        "&travelmode=driving";
+async function payCommission() {
+    showNotice("Real commission payment abhi connected nahi hai. Payment gateway aur secure server ke bina payment successful mark nahi ki jayegi.");
+}
 
+/* ================= HOTEL OWNER DASHBOARD ================= */
 
-    console.log(
-        "📍 DESTINATION NAVIGATION:",
-        mapsUrl
-    );
+function showHotelDashboard(show) {
+    let panel = getElement("hotelOwnerDashboard");
 
+    if (!panel) {
+        panel = document.createElement("section");
+        panel.id = "hotelOwnerDashboard";
+        panel.className = "app-screen";
+        panel.style.padding = "16px";
+        panel.style.display = "none";
 
-    if (autoOpen) {
+        panel.innerHTML = `
+            <header style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <div>
+                    <small>NV TRAVELSS</small>
+                    <h2>Hotel Owner Dashboard</h2>
+                </div>
+                <button onclick="logout()">🚪 Logout</button>
+            </header>
 
-        try {
+            <div class="driver-card" style="margin-top:20px;padding:16px;border:1px solid #ddd;border-radius:12px;">
+                <h3>🏨 Incoming Hotel Bookings</h3>
+                <p>Customers ki hotel booking requests yahan dikhengi.</p>
+                <div id="hotelBookingRequests">
+                    <p>Bookings load ho rahi hain...</p>
+                </div>
+            </div>
+        `;
 
-            const opened =
-                window.open(
-                    mapsUrl,
-                    "_blank"
-                );
+        document.body.appendChild(panel);
+    }
 
+    panel.style.display = show ? "block" : "none";
 
-            if (!opened) {
+    if (show) {
+        ["loginScreen", "customerApp", "driverApp"].forEach(id => {
+            const el = getElement(id);
+            if (el) el.style.display = "none";
+        });
+    }
+}
 
-                console.log(
-                    "Google Maps popup blocked. Use Navigate button."
-                );
+function startHotelDashboard() {
+    if (!currentUser || currentUser.role !== "hotel") return;
 
+    showHotelDashboard(true);
+
+    if (hotelBookingsUnsubscribe) {
+        hotelBookingsUnsubscribe();
+        hotelBookingsUnsubscribe = null;
+    }
+
+    hotelBookingsUnsubscribe = db.collection("hotelBookings")
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .onSnapshot(snapshot => {
+            const bookings = [];
+
+            snapshot.forEach(doc => {
+                bookings.push({ id: doc.id, ...doc.data() });
+            });
+
+            renderHotelBookings(bookings);
+        }, error => {
+            console.error("Hotel bookings listener error:", error);
+
+            const box = getElement("hotelBookingRequests");
+            if (box) {
+                box.innerHTML = `
+                    <p>Hotel bookings load nahi hui.</p>
+                    <p>Firebase Firestore rules aur permissions check karein.</p>
+                `;
             }
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Destination Maps open error:",
-                error
-            );
-
-        }
-
-    }
-
-
-    return mapsUrl;
-
+        });
 }
 
+function renderHotelBookings(bookings) {
+    const box = getElement("hotelBookingRequests");
+    if (!box) return;
 
-/* =========================================
-DRIVER ACCEPTED RIDE SCREEN
-========================================= */
-
-function showAcceptedDriverRide(ride) {
-
-    const driverApp =
-        document.getElementById(
-            "driverApp"
-        );
-
-
-    if (!driverApp) {
+    if (!bookings.length) {
+        box.innerHTML = "<p>Abhi koi hotel booking request nahi hai.</p>";
         return;
     }
 
+    box.innerHTML = bookings.map(booking => `
+        <div style="padding:12px;margin:12px 0;border:1px solid #ddd;border-radius:10px;">
+            <h3>🏨 ${safeText(booking.destination || "Hotel Request")}</h3>
+            <p><b>Customer:</b> ${safeText(booking.customerName || "Customer")}</p>
+            <p><b>Phone:</b> ${safeText(booking.customerPhone || "")}</p>
+            <p><b>Check-in:</b> ${safeText(booking.checkIn || "")}</p>
+            <p><b>Check-out:</b> ${safeText(booking.checkOut || "")}</p>
+            <p><b>Guests:</b> ${safeText(booking.guests || "")}</p>
+            <p><b>Status:</b> ${safeText(booking.status || "pending")}</p>
 
-    let card =
-        document.getElementById(
-            "activeDriverRide"
-        );
-
-
-    if (!card) {
-
-        card =
-            document.createElement(
-                "div"
-            );
-
-        card.id =
-            "activeDriverRide";
-
-        driverApp.prepend(
-            card
-        );
-
-    }
-
-
-    card.style.padding =
-        "18px";
-
-    card.style.margin =
-        "15px 0";
-
-    card.style.borderRadius =
-        "16px";
-
-    card.style.background =
-        "#ffffff";
-
-    card.style.boxShadow =
-        "0 4px 15px rgba(0,0,0,0.12)";
-
-
-    card.innerHTML =
-
-        "<h3>✅ Ride Accepted</h3>" +
-
-        "<p><b>Customer:</b> " +
-        escapeRideText(
-            ride.customerName
-        ) +
-        "</p>" +
-
-        "<p><b>Pickup:</b> " +
-        escapeRideText(
-            ride.pickup
-        ) +
-        "</p>" +
-
-        "<p><b>Destination:</b> " +
-        escapeRideText(
-            ride.destination
-        ) +
-        "</p>" +
-
-        "<p><b>Vehicle:</b> " +
-        escapeRideText(
-            getVehicleName(
-                ride.vehicle
-            )
-        ) +
-        "</p>" +
-
-        "<p><b>Rate:</b> ₹" +
-        (
-            ride.ratePerKm ||
-            getVehicleRate(
-                ride.vehicle
-            )
-        ) +
-        "/km</p>" +
-
-        "<p><b>Status:</b> 🚗 Driver is going to customer</p>" +
-
-        "<button onclick=\"openPickupNavigation(currentRide, true)\" " +
-        "style=\"display:block;width:100%;padding:13px 18px;margin:10px 0;\">" +
-        "🗺️ NAVIGATE TO CUSTOMER</button>" +
-
-        "<button onclick=\"driverComingToCustomer()\" " +
-        "style=\"display:block;width:100%;padding:13px 18px;\">" +
-        "📍 I REACHED CUSTOMER</button>";
-
+            ${booking.status === "pending" ? `
+                <button onclick="updateHotelBooking('${booking.id}','accepted')">Accept Booking</button>
+                <button onclick="updateHotelBooking('${booking.id}','rejected')">Reject</button>
+            ` : ""}
+        </div>
+    `).join("");
 }
 
-
-/* =========================================
-DRIVER COMING TO CUSTOMER
-========================================= */
-
-function driverComingToCustomer() {
-
-    const rideId =
-        activeRideId;
-
-
-    if (!rideId) {
-
-        alert(
-            "No active ride."
-        );
-
+async function updateHotelBooking(bookingId, status) {
+    if (!currentUser || currentUser.role !== "hotel") {
+        showNotice("Hotel owner login karein.");
         return;
     }
 
+    try {
+        await db.collection("hotelBookings").doc(bookingId).update({
+            status,
+            hotelOwnerUid: currentUser.uid,
+            hotelOwnerPhone: currentUser.phone,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-        return;
+        showNotice(status === "accepted" ? "Booking accept ho gayi." : "Booking reject ho gayi.");
+    } catch (error) {
+        console.error("Hotel booking status error:", error);
+        showNotice("Booking status update nahi hua. Firebase rules check karein.");
     }
-
-
-    db.collection("rides")
-        .doc(rideId)
-        .get()
-
-        .then(
-            function (doc) {
-
-                if (!doc.exists) {
-
-                    throw new Error(
-                        "Ride does not exist."
-                    );
-
-                }
-
-
-                const ride =
-                    doc.data();
-
-
-                if (
-                    ride.status !==
-                    "accepted"
-                ) {
-
-                    if (
-                        ride.status ===
-                        "driverComing"
-                    ) {
-
-                        return ride;
-
-                    }
-
-                    throw new Error(
-                        "Ride is not in accepted status."
-                    );
-
-                }
-
-
-                return db.collection("rides")
-                    .doc(rideId)
-                    .update({
-
-                        status:
-                            "driverComing",
-
-                        driverComingAt:
-                            firebase.firestore.FieldValue
-                                .serverTimestamp()
-
-                    })
-
-                    .then(
-                        function () {
-
-                            return {
-                                ...ride,
-
-                                id:
-                                    rideId,
-
-                                status:
-                                    "driverComing"
-
-                            };
-
-                        }
-                    );
-
-            }
-        )
-
-        .then(
-            function (ride) {
-
-                currentRide = {
-
-                    ...currentRide,
-
-                    ...ride,
-
-                    id:
-                        rideId,
-
-                    status:
-                        "driverComing"
-
-                };
-
-
-                showOtpVerificationForDriver(
-                    currentRide
-                );
-
-            }
-        )
-
-        .catch(
-            function (error) {
-
-                console.error(
-                    "Driver coming error:",
-                    error
-                );
-
-
-                alert(
-                    "Status update nahi hua: " +
-                    error.message
-                );
-
-            }
-        );
-
 }
 
+/* ================= CUSTOMER HOTEL SEARCH ================= */
 
-/* =========================================
-DRIVER OTP VERIFICATION UI
-========================================= */
-
-function showOtpVerificationForDriver(ride) {
-
-    const driverApp =
-        document.getElementById(
-            "driverApp"
-        );
-
-
-    if (!driverApp) {
+async function hotelSearch() {
+    if (!currentUser || currentUser.role !== "customer") {
+        showNotice("Hotel request bhejne ke liye Customer login karein.");
         return;
     }
 
+    const page = getElement("hotelPage");
+    if (!page) return;
 
-    let card =
-        document.getElementById(
-            "activeDriverRide"
-        );
+    const inputs = page.querySelectorAll('input');
+    const selects = page.querySelectorAll('select');
 
+    const destination = inputs[0]?.value.trim();
+    const checkIn = inputs[1]?.value;
+    const checkOut = inputs[2]?.value;
+    const guests = selects[0]?.value || "1 Guest";
 
-    if (!card) {
-
-        card =
-            document.createElement(
-                "div"
-            );
-
-        card.id =
-            "activeDriverRide";
-
-        driverApp.prepend(
-            card
-        );
-
+    if (!destination || !checkIn || !checkOut) {
+        showNotice("Destination, check-in aur check-out date enter karein.");
+        return;
     }
 
+    if (checkOut <= checkIn) {
+        showNotice("Check-out date, check-in ke baad ki honi chahiye.");
+        return;
+    }
 
-    card.style.padding =
-        "18px";
+    try {
+        const doc = await db.collection("hotelBookings").add({
+            customerUid: currentUser.uid,
+            customerName: currentUser.name,
+            customerPhone: currentUser.phone,
+            destination,
+            checkIn,
+            checkOut,
+            guests,
+            status: "pending",
+            hotelOwnerUid: "",
+            hotelOwnerPhone: "",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-    card.style.margin =
-        "15px 0";
+        const result = document.createElement("div");
+        result.className = "result-box";
+        result.style.marginTop = "16px";
+        result.innerHTML = `
+            <h3>✅ Hotel request submit ho gayi</h3>
+            <p><b>Destination:</b> ${safeText(destination)}</p>
+            <p><b>Check-in:</b> ${safeText(checkIn)}</p>
+            <p><b>Check-out:</b> ${safeText(checkOut)}</p>
+            <p><b>Guests:</b> ${safeText(guests)}</p>
+            <p><b>Request ID:</b> ${safeText(doc.id)}</p>
+            <p>Status: Pending hotel confirmation</p>
+            <p>Abhi actual hotel availability ya room confirm nahi hua hai.</p>
+        `;
 
-    card.style.borderRadius =
-        "16px";
+        const oldResult = getElement("hotelSearchResult");
+        if (oldResult) oldResult.remove();
 
-    card.style.background =
-        "#ffffff";
+        result.id = "hotelSearchResult";
+        page.appendChild(result);
 
-
-    card.innerHTML =
-
-        "<h3>🔐 Start Ride Verification</h3>" +
-
-        "<p><b>Customer:</b> " +
-        escapeRideText(
-            ride.customerName
-        ) +
-        "</p>" +
-
-        "<p>Customer ke paas jo <b>4 digit Ride OTP</b> hai, " +
-        "wo customer se lekar neeche enter karein.</p>" +
-
-        "<input id=\"driverRideOtpInput\" " +
-        "type=\"tel\" " +
-        "maxlength=\"4\" " +
-        "inputmode=\"numeric\" " +
-        "placeholder=\"Enter 4 digit OTP\" " +
-        "style=\"padding:12px;width:100%;box-sizing:border-box;margin:10px 0;\">" +
-
-        "<button onclick=\"verifyRideOtpAndStart()\" " +
-        "style=\"display:block;width:100%;padding:13px 18px;\">" +
-        "🔐 VERIFY OTP & START RIDE" +
-        "</button>";
-
+    } catch (error) {
+        console.error("Hotel search error:", error);
+        showNotice("Hotel request save nahi hui. Firestore rules check karein.");
+    }
 }
 
-
-/* =========================================
-VERIFY RIDE OTP + START
-========================================= */
-
-function verifyRideOtpAndStart() {
-
-    const rideId =
-        activeRideId;
-
-
-    if (!rideId) {
-
-        alert(
-            "No active ride."
-        );
-
-        return;
-    }
-
-
-    const otpInput =
-        document.getElementById(
-            "driverRideOtpInput"
-        );
-
-
-    if (!otpInput) {
-        return;
-    }
-
-
-    const enteredOtp =
-        otpInput.value.trim();
-
-
-    if (
-        !/^\d{4}$/.test(
-            enteredOtp
-        )
-    ) {
-
-        alert(
-            "Customer ka 4 digit Ride OTP enter karein."
-        );
-
-        otpInput.focus();
-
-        return;
-    }
-
-
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-        return;
-    }
-
-
-    const rideRef =
-        db.collection("rides")
-            .doc(rideId);
-
-
-    rideRef.get()
-
-        .then(
-            function (doc) {
-
-                if (!doc.exists) {
-
-                    throw new Error(
-                        "Ride does not exist."
-                    );
-
-                }
-
-
-                const ride =
-                    doc.data();
-
-
-                if (
-                    String(
-                        ride.rideOtp || ""
-                    ) !== enteredOtp
-                ) {
-
-                    throw new Error(
-                        "OTP incorrect hai. Ride start nahi hui."
-                    );
-
-                }
-
-
-                if (
-                    ride.status !==
-                    "driverComing"
-                ) {
-
-                    throw new Error(
-                        "Ride is not ready to start."
-                    );
-
-                }
-
-
-                return rideRef.update({
-
-                    status:
-                        "started",
-
-                    otpVerified:
-                        true,
-
-                    startedAt:
-                        firebase.firestore.FieldValue
-                            .serverTimestamp(),
-
-                    actualDistanceKm:
-                        Number(
-                            ride.actualDistanceKm ||
-                            0
-                        ),
-
-                    liveFare:
-                        Number(
-                            ride.liveFare ||
-                            ride.ratePerKm ||
-                            getVehicleRate(
-                                ride.vehicle
-                            )
-                        )
-
-                });
-
-            }
-        )
-
-        .then(
-            function () {
-
-                currentRide = {
-
-                    ...currentRide,
-
-                    status:
-                        "started",
-
-                    otpVerified:
-                        true
-
-                };
-
-
-                alert(
-                    "✅ OTP verified. Ride Started!"
-                );
-
-
-                showStartedDriverRide(
-                    currentRide
-                );
-
-
-                /*
-                   Ride START होते ही destination
-                   navigation open karne ki koshish.
-                   Agar browser popup block kare,
-                   Navigate to Destination button
-                   screen par available rahega.
-                */
-
-                openDestinationNavigation(
-                    currentRide,
-                    true
-                );
-
-            }
-        )
-
-        .catch(
-            function (error) {
-
-                console.error(
-                    "OTP verification error:",
-                    error
-                );
-
-
-                alert(
-                    error.message
-                );
-
-            }
-        );
-
-}
-
-
-/* =========================================
-DRIVER STARTED RIDE SCREEN
-========================================= */
-
-function showStartedDriverRide(ride) {
-
-    const card =
-        document.getElementById(
-            "activeDriverRide"
-        );
-
-
-    if (!card) {
-        return;
-    }
-
-
-    card.innerHTML =
-
-        "<h3>🚕 Ride Started</h3>" +
-
-        "<p><b>Customer:</b> " +
-        escapeRideText(
-            ride.customerName
-        ) +
-        "</p>" +
-
-        "<p><b>Pickup:</b> " +
-        escapeRideText(
-            ride.pickup
-        ) +
-        "</p>" +
-
-        "<p><b>Destination:</b> " +
-        escapeRideText(
-            ride.destination
-        ) +
-        "</p>" +
-
-        "<p><b>Vehicle:</b> " +
-        escapeRideText(
-            getVehicleName(
-                ride.vehicle
-            )
-        ) +
-        "</p>" +
-
-        "<p>📍 Distance: GPS se calculate hogi.</p>" +
-
-        "<p>💰 Final fare ride complete hone par calculate hoga.</p>" +
-
-        "<button onclick=\"openDestinationNavigation(currentRide, true)\" " +
-        "style=\"display:block;width:100%;padding:13px 18px;margin:10px 0;\">" +
-        "🗺️ NAVIGATE TO DESTINATION</button>" +
-
-        "<p style=\"font-size:13px;\">" +
-        "Customer agar beech mein utarna chahe ya destination se aage jaana chahe, " +
-        "customer ke utarne par ride complete kar sakte hain." +
-        "</p>" +
-
-        "<button onclick=\"completeCurrentRide()\" " +
-        "style=\"display:block;width:100%;padding:13px 18px;\">" +
-        "✅ COMPLETE RIDE" +
-        "</button>";
-
-}
-
-
-/* =========================================
-REJECT SPECIFIC RIDE
-========================================= */
-
-function rejectSpecificRide(rideId) {
-
-    if (!rideId) {
-
-        alert(
-            "No ride request available."
-        );
-
-        return;
-    }
-
-
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-        return;
-    }
-
-
-    const driverPhone =
-        localStorage.getItem(
-            "nvUserPhone"
-        ) || "";
-
-
-    db.collection("rides")
-        .doc(rideId)
-        .update({
-
-            rejectedBy:
-                firebase.firestore.FieldValue
-                    .arrayUnion(
-                        driverPhone
-                    ),
-
-            rejectedAt:
-                firebase.firestore.FieldValue
-                    .serverTimestamp()
-
-        })
-
-        .then(
-            function () {
-
-                delete driverPendingRides[
-                    rideId
-                ];
-
-
-                if (
-                    currentRide &&
-                    currentRide.id ===
-                    rideId
-                ) {
-
-                    currentRide =
-                        null;
-
-                }
-
-
-                alert(
-                    "Ride rejected."
-                );
-
-
-                if (driverOnline) {
-
-                    startDriverRideListener();
-
-                }
-
-            }
-        )
-
-        .catch(
-            function (error) {
-
-                console.error(
-                    "Reject ride error:",
-                    error
-                );
-
-
-                alert(
-                    "Ride reject nahi hui: " +
-                    error.message
-                );
-
-            }
-
-        );
-
-}
-
-
-/* =========================================
-REJECT LIVE RIDE - COMPATIBILITY
-========================================= */
-
-function rejectLiveRide() {
-
-    if (
-        currentRide &&
-        currentRide.id
-    ) {
-
-        rejectSpecificRide(
-            currentRide.id
-        );
-
-        return;
-    }
-
-
-    alert(
-        "No ride request available."
-    );
-
-}
-
-
-/* =========================================
-GPS DISTANCE
-========================================= */
-
-function calculateDistanceKm(
-    lat1,
-    lon1,
-    lat2,
-    lon2
-) {
-
-    const earthRadiusKm =
-        6371;
-
-
-    const dLat =
-        (
-            lat2 -
-            lat1
-        ) *
-        Math.PI /
-        180;
-
-
-    const dLon =
-        (
-            lon2 -
-            lon1
-        ) *
-        Math.PI /
-        180;
-
-
-    const a =
-        Math.sin(
-            dLat / 2
-        ) *
-        Math.sin(
-            dLat / 2
-        ) +
-
-        Math.cos(
-            lat1 *
-            Math.PI /
-            180
-        ) *
-
-        Math.cos(
-            lat2 *
-            Math.PI /
-            180
-        ) *
-
-        Math.sin(
-            dLon / 2
-        ) *
-        Math.sin(
-            dLon / 2
-        );
-
-
-    const c =
-        2 *
-        Math.atan2(
-            Math.sqrt(a),
-            Math.sqrt(
-                1 - a
-            )
-        );
-
-
-    return earthRadiusKm * c;
-
-}
-
-
-/* =========================================
-START CUSTOMER GPS
-========================================= */
-
-function startCustomerGpsTracking(ride) {
-
-    if (!ride || !ride.id) {
-        return;
-    }
-
-
-    if (
-        !navigator.geolocation
-    ) {
-
-        const message =
-            document.getElementById(
-                "rideMessage"
-            );
-
-
-        if (message) {
-
-            message.innerHTML +=
-                "<br>⚠️ GPS is not available on this device.";
-
-        }
-
-        return;
-    }
-
-
-    if (
-        gpsTrackingRideId ===
-        ride.id &&
-        gpsWatchId !== null
-    ) {
-
-        return;
-
-    }
-
-
-    stopCustomerGpsTracking();
-
-
-    gpsTrackingRideId =
-        ride.id;
-
-
-    gpsTotalDistanceKm =
-        Number(
-            ride.actualDistanceKm ||
-            0
-        );
-
-
-    gpsLastPosition =
-        null;
-
-
-    gpsWatchId =
-        navigator.geolocation.watchPosition(
-
-            function (position) {
-
-                handleCustomerGpsPosition(
-                    ride.id,
-                    position
-                );
-
-            },
-
-            function (error) {
-
-                console.error(
-                    "GPS error:",
-                    error
-                );
-
-
-                const message =
-                    document.getElementById(
-                        "rideMessage"
-                    );
-
-
-                if (message) {
-
-                    message.innerHTML +=
-                        "<br>⚠️ GPS permission/location required for distance tracking.";
-
-                }
-
-            },
-
-            {
-
-                enableHighAccuracy:
-                    true,
-
-                maximumAge:
-                    3000,
-
-                timeout:
-                    10000
-
-            }
-
-        );
-
-}
-
-
-/* =========================================
-HANDLE GPS POSITION
-========================================= */
-
-function handleCustomerGpsPosition(
-    rideId,
-    position
-) {
-
-    if (
-        gpsTrackingRideId !==
-        rideId
-    ) {
-
-        return;
-    }
-
-
-    const lat =
-        position.coords.latitude;
-
-
-    const lng =
-        position.coords.longitude;
-
-
-    const accuracy =
-        Number(
-            position.coords.accuracy ||
-            999
-        );
-
-
-    if (
-        accuracy > 100
-    ) {
-
-        console.log(
-            "GPS accuracy too low:",
-            accuracy
-        );
-
-        return;
-    }
-
-
-    if (gpsLastPosition) {
-
-        const distance =
-            calculateDistanceKm(
-
-                gpsLastPosition.lat,
-                gpsLastPosition.lng,
-
-                lat,
-                lng
-
-            );
-
-
-        if (
-            distance >= 0 &&
-            distance <= 1
-        ) {
-
-            gpsTotalDistanceKm +=
-                distance;
-
-        }
-
-    }
-
-
-    gpsLastPosition = {
-
-        lat:
-            lat,
-
-        lng:
-            lng
-
-    };
-
-
-    const now =
-        Date.now();
-
-
-    if (
-        now -
-        gpsLastUpdateTime <
-        5000
-    ) {
-
-        return;
-    }
-
-
-    gpsLastUpdateTime =
-        now;
-
-
-    updateRideGpsInFirestore(
-        rideId,
-        lat,
-        lng,
-        gpsTotalDistanceKm
-    );
-
-}
-
-
-/* =========================================
-UPDATE GPS + LIVE FARE
-========================================= */
-
-function updateRideGpsInFirestore(
-    rideId,
-    lat,
-    lng,
-    distanceKm
-) {
-
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-        return;
-    }
-
-
-    db.collection("rides")
-        .doc(rideId)
-        .get()
-
-        .then(
-            function (doc) {
-
-                if (!doc.exists) {
-                    return;
-                }
-
-
-                const ride =
-                    doc.data();
-
-
-                if (
-                    ride.status !==
-                    "started"
-                ) {
-
-                    return;
-                }
-
-
-                const rate =
-                    Number(
-                        ride.ratePerKm ||
-                        getVehicleRate(
-                            ride.vehicle
-                        ) ||
-                        0
-                    );
-
-
-                const minimumFare =
-                    rate;
-
-
-                const calculatedFare =
-                    Math.max(
-                        minimumFare,
-                        distanceKm *
-                        rate
-                    );
-
-
-                db.collection("rides")
-                    .doc(rideId)
-                    .update({
-
-                        actualDistanceKm:
-                            Number(
-                                distanceKm.toFixed(
-                                    3
-                                )
-                            ),
-
-                        liveFare:
-                            Number(
-                                calculatedFare.toFixed(
-                                    2
-                                )
-                            ),
-
-                        gpsLat:
-                            lat,
-
-                        gpsLng:
-                            lng
-
-                    });
-
-            }
-        )
-
-        .catch(
-            function (error) {
-
-                console.error(
-                    "GPS Firestore update error:",
-                    error
-                );
-
-            }
-        );
-
-}
-
-
-/* =========================================
-STOP CUSTOMER GPS
-========================================= */
-
-function stopCustomerGpsTracking() {
-
-    if (
-        gpsWatchId !== null &&
-        navigator.geolocation
-    ) {
-
-        navigator.geolocation.clearWatch(
-            gpsWatchId
-        );
-
-    }
-
-
-    gpsWatchId =
-        null;
-
-    gpsTrackingRideId =
-        null;
-
-    gpsLastPosition =
-        null;
-
-    gpsTotalDistanceKm =
-        0;
-
-    gpsLastUpdateTime =
-        0;
-
-}
-
-
-/* =========================================
-COMPLETE RIDE
-========================================= */
-
-function completeCurrentRide() {
-
-    const rideId =
-        activeRideId ||
-        (
-            currentRide &&
-            currentRide.id
-        );
-
-
-    if (!rideId) {
-
-        alert(
-            "No active ride."
-        );
-
-        return;
-    }
-
-
-    const db =
-        getDatabase();
-
-
-    if (!db) {
-        return;
-    }
-
-
-    db.collection("rides")
-        .doc(rideId)
-        .get()
-
-        .then(
-            function (doc) {
-
-                if (!doc.exists) {
-
-                    throw new Error(
-                        "Ride does not exist."
-                    );
-
-                }
-
-
-                const ride =
-                    doc.data();
-
-
-                /*
-                   IMPORTANT:
-                   Ride STARTED hone ke baad
-                   customer kisi bhi location par
-                   ride complete karwa sakta hai.
-                   Destination par pahunchna mandatory
-                   nahi hai.
-                */
-
-                if (
-                    ride.status !==
-                    "started"
-                ) {
-
-                    throw new Error(
-                        "Ride OTP verify karke ride start karein."
-                    );
-
-                }
-
-
-                const rate =
-                    Number(
-                        ride.ratePerKm ||
-                        getVehicleRate(
-                            ride.vehicle
-                        ) ||
-                        0
-                    );
-
-
-                const finalDistance =
-                    Number(
-                        ride.actualDistanceKm ||
-                        gpsTotalDistanceKm ||
-                        0
-                    );
-
-
-                const finalFare =
-                    Math.max(
-                        rate,
-                        finalDistance *
-                        rate
-                    );
-
-
-                const extraDistance =
-                    Math.max(
-                        0,
-                        finalDistance -
-                        1
-                    );
-
-
-                return db.collection("rides")
-                    .doc(rideId)
-                    .update({
-
-                        status:
-                            "completed",
-
-                        completedAt:
-                            firebase.firestore
-                                .FieldValue
-                                .serverTimestamp(),
-
-                        finalDistanceKm:
-                            Number(
-                                finalDistance.toFixed(
-                                    3
-                                )
-                            ),
-
-                        finalFare:
-                            Number(
-                                finalFare.toFixed(
-                                    2
-                                )
-                            ),
-
-                        actualDistanceKm:
-                            Number(
-                                finalDistance.toFixed(
-                                    3
-                                )
-                            ),
-
-                        extraDistanceKm:
-                            Number(
-                                extraDistance.toFixed(
-                                    3
-                                )
-                            )
-
-                    })
-
-                    .then(
-                        function () {
-
-                            return {
-                                ...ride,
-
-                                id:
-                                    rideId,
-
-                                status:
-                                    "completed",
-
-                                finalDistanceKm:
-                                    finalDistance,
-
-                                finalFare:
-                                    finalFare,
-
-                                extraDistanceKm:
-                                    extraDistance
-
-                            };
-
-                        }
-                    );
-
-            }
-        )
-
-        .then(
-            function (completedRide) {
-
-                stopCustomerGpsTracking();
-
-
-                currentRide =
-                    completedRide;
-
-
-                showCompletedDriverRide(
-                    completedRide
-                );
-
-
-                alert(
-                    "✅ Ride completed successfully!"
-                );
-
-            }
-        )
-
-        .catch(
-            function (error) {
-
-                console.error(
-                    "Complete ride error:",
-                    error
-                );
-
-
-                alert(
-                    "Ride complete nahi hui: " +
-                    error.message
-                );
-
-            }
-        );
-
-}
-
-
-/* =========================================
-COMPLETED DRIVER RIDE SUMMARY
-========================================= */
-
-function showCompletedDriverRide(ride) {
-
-    const card =
-        document.getElementById(
-            "activeDriverRide"
-        );
-
-
-    if (!card) {
-        return;
-    }
-
-
-    const distance =
-        Number(
-            ride.finalDistanceKm ||
-            ride.actualDistanceKm ||
-            0
-        ).toFixed(2);
-
-
-    const fare =
-        Number(
-            ride.finalFare ||
-            0
-        ).toFixed(2);
-
-
-    card.innerHTML =
-
-        "<h3>✅ Ride Completed</h3>" +
-
-        "<p><b>Customer:</b> " +
-        escapeRideText(
-            ride.customerName
-        ) +
-        "</p>" +
-
-        "<p><b>Total Distance:</b> " +
-        distance +
-        " km</p>" +
-
-        "<p><b>Final Fare:</b> ₹" +
-        fare +
-        "</p>" +
-
-        "<button onclick=\"closeCompletedRide()\">" +
-        "CLOSE RIDE" +
-        "</button>";
-
-}
-
-
-/* =========================================
-CLOSE COMPLETED RIDE
-========================================= */
-
-function closeCompletedRide() {
-
-    activeRideId =
-        null;
-
-
-    currentRide =
-        null;
-
-
-    pendingRide =
-        false;
-
-
-    updateRequestBadge(0);
-
-
-    const card =
-        document.getElementById(
-            "activeDriverRide"
-        );
-
-
-    if (card) {
-
-        card.remove();
-
-    }
-
-
-    if (driverOnline) {
-
-        startDriverRideListener();
-
-    }
-
-
-    alert(
-        "Ride closed. New rides can be accepted."
-    );
-
-}
-
-
-/* =========================================
-OLD ACCEPT FUNCTION
-========================================= */
-
-function acceptRide() {
-
-    acceptLiveRide();
-
-}
-
-
-/* =========================================
-OLD REJECT FUNCTION
-========================================= */
-
-function rejectRide() {
-
-    rejectLiveRide();
-
-}
-
-
-/* =========================================
-DRIVER STATUS UI
-========================================= */
-
-function updateDriverStatusUI() {
-
-    const button =
-        document.getElementById(
-            "onlineButton"
-        );
-
-
-    const statusText =
-        document.getElementById(
-            "driverStatusText"
-        );
-
-
-    if (driverOnline) {
-
-        if (button) {
-
-            button.textContent =
-                "GO OFFLINE";
-
-            button.classList.add(
-                "online"
-            );
-
-        }
-
-
-        if (statusText) {
-
-            statusText.textContent =
-                "Online";
-
-            statusText.style.color =
-                "#16a34a";
-
-        }
-
-    }
-
-    else {
-
-        if (button) {
-
-            button.textContent =
-                "GO ONLINE";
-
-            button.classList.remove(
-                "online"
-            );
-
-        }
-
-
-        if (statusText) {
-
-            statusText.textContent =
-                "Offline";
-
-            statusText.style.color =
-                "#dc2626";
-
-        }
-
-    }
-
-}
-
-
-/* =========================================
-DRIVER ONLINE / OFFLINE
-========================================= */
-
-function toggleDriverStatus() {
-
-    if (
-        driverOnline &&
-        activeRideId
-    ) {
-
-        alert(
-            "Pehle active ride complete karein, phir offline ja sakte hain."
-        );
-
-        return;
-    }
-
-
-    driverOnline =
-        !driverOnline;
-
-
-    updateDriverStatusUI();
-
-
-    if (driverOnline) {
-
-        console.log(
-            "🚕 Driver is now ONLINE."
-        );
-
-
-        startDriverRideListener();
-
-    }
-
-    else {
-
-        console.log(
-            "🚕 Driver is now OFFLINE."
-        );
-
-
-        stopDriverRideListener();
-
-
-        if (!activeRideId) {
-
-            pendingRide =
-                false;
-
-            currentRide =
-                null;
-
-            updateRequestBadge(0);
-
-            showNoRideRequest();
-
-        }
-
-    }
-
-}
-
-
-/* =========================================
-DRIVER PASS
-========================================= */
-
-function activatePass() {
-
-    const status =
-        document.getElementById(
-            "passStatus"
-        );
-
-
-    const confirmPass =
-        confirm(
-            "Driver Pass ₹75 for 24 hours activate karein?"
-        );
-
-
-    if (!confirmPass) {
-        return;
-    }
-
-
-    if (status) {
-
-        status.textContent =
-            "Active for 24 hours";
-
-        status.style.color =
-            "#16a34a";
-
-    }
-
-
-    alert(
-        "🎫 Driver Pass activated."
-    );
-
-}
-
-
-/* =========================================
-DRIVER COMMISSION
-========================================= */
-
-function payCommission() {
-
-    alert(
-        "💳 Payment gateway will be connected here."
-    );
-
-}
-
-
-/* =========================================
-HOTEL
-========================================= */
-
-function hotelSearch() {
-
-    alert(
-        "🏨 Hotel search request created."
-    );
-
-}
-
-
-/* =========================================
-PACKAGES
-========================================= */
+/* ================= PACKAGES ================= */
 
 function packageSearch() {
+    const page = getElement("packagePage");
+    const inputs = page?.querySelectorAll("input");
+    const selects = page?.querySelectorAll("select");
 
-    alert(
-        "🎒 Package search request created."
-    );
+    const from = inputs?.[0]?.value.trim();
+    const destination = inputs?.[1]?.value.trim();
+    const days = selects?.[0]?.value;
+    const passengers = inputs?.[2]?.value;
 
-}
-
-
-/* =========================================
-SEARCH
-========================================= */
-
-function showSearch() {
-
-    openPage(
-        "searchPage"
-    );
-
-}
-
-
-function performSearch() {
-
-    const input =
-        document.getElementById(
-            "searchInput"
-        );
-
-
-    const result =
-        document.getElementById(
-            "searchResult"
-        );
-
-
-    if (!input || !result) {
+    if (!from || !destination) {
+        showNotice("Starting location aur destination enter karein.");
         return;
     }
 
+    const result = document.createElement("div");
+    result.className = "result-box";
+    result.style.marginTop = "16px";
+    result.innerHTML = `
+        <h3>🎒 Package Request</h3>
+        <p><b>From:</b> ${safeText(from)}</p>
+        <p><b>Destination:</b> ${safeText(destination)}</p>
+        <p><b>Duration:</b> ${safeText(days)}</p>
+        <p><b>Passengers:</b> ${safeText(passengers || "Not specified")}</p>
+        <p>Yeh abhi request preview hai. Package prices aur confirmed bookings abhi connect nahi hain.</p>
+    `;
 
-    const text =
-        input.value.trim();
+    const old = getElement("packageSearchResult");
+    if (old) old.remove();
 
-
-    result.style.display =
-        "block";
-
-
-    if (text === "") {
-
-        result.textContent =
-            "Please enter something to search.";
-
-        return;
-    }
-
-
-    result.textContent =
-        "🔍 Searching for: " +
-        text;
-
+    result.id = "packageSearchResult";
+    page?.appendChild(result);
 }
 
-
-/* =========================================
-NOTIFICATIONS
-========================================= */
-
-function showNotifications() {
-
-    alert(
-        "🔔 No new notifications."
-    );
-
-}
-
-
-/* =========================================
-REELS
-========================================= */
+/* ================= REELS / SOCIAL ================= */
 
 function likeReel(button) {
+    if (!button) return;
 
-    if (!button) {
-        return;
-    }
+    const liked = button.dataset.liked === "true";
+    button.dataset.liked = liked ? "false" : "true";
 
+    const span = button.querySelector("span");
+    if (span) span.textContent = liked ? "❤️" : "💖";
 
-    const icon =
-        button.querySelector(
-            "span"
-        );
-
-
-    if (!icon) {
-        return;
-    }
-
-
-    if (
-        icon.textContent === "❤️"
-    ) {
-
-        icon.textContent =
-            "💙";
-
-        button.style.color =
-            "#60a5fa";
-
-    }
-
-    else {
-
-        icon.textContent =
-            "❤️";
-
-        button.style.color =
-            "white";
-
-    }
-
+    const small = button.querySelector("small");
+    if (small) small.textContent = liked ? "Like" : "Liked";
 }
-
-
-/* =========================================
-COMMENT REEL
-========================================= */
 
 function commentReel() {
-
-    const comment =
-        prompt(
-            "Write your comment:"
-        );
-
-
-    if (
-        comment &&
-        comment.trim() !== ""
-    ) {
-
-        alert(
-            "💬 Comment added!"
-        );
-
+    const comment = prompt("Apna comment likhein:");
+    if (comment && comment.trim()) {
+        showNotice("Comment likha gaya, lekin online comments database abhi connect nahi hai.");
     }
-
 }
 
+async function shareReel() {
+    const shareData = {
+        title: "NV TRAVELSS",
+        text: "Travel with NV Travelss ✈️",
+        url: window.location.href
+    };
 
-/* =========================================
-SHARE REEL
-========================================= */
-
-function shareReel() {
-
-    const shareText =
-        "Check out this travel reel from NV Travelss!";
-
-
-    if (
-        navigator.share
-    ) {
-
-        navigator.share({
-
-            title:
-                "NV Travelss",
-
-            text:
-                shareText
-
-        }).catch(
-            function () {}
-        );
-
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(
+                shareData.text + " " + shareData.url
+            );
+            showNotice("Share link copy ho gaya.");
+        } else {
+            showNotice(shareData.url);
+        }
+    } catch (error) {
+        if (error.name !== "AbortError") {
+            console.error("Share error:", error);
+        }
     }
-
-    else {
-
-        alert(
-            "↗️ Reel share option opened."
-        );
-
-    }
-
 }
-
-
-/* =========================================
-SAVE REEL
-========================================= */
 
 function saveReel(button) {
+    if (!button) return;
 
-    if (!button) {
-        return;
-    }
+    const saved = button.dataset.saved === "true";
+    button.dataset.saved = saved ? "false" : "true";
 
+    const span = button.querySelector("span");
+    if (span) span.textContent = saved ? "🔖" : "✅";
 
-    const icon =
-        button.querySelector(
-            "span"
-        );
-
-
-    if (!icon) {
-        return;
-    }
-
-
-    if (
-        icon.textContent === "🔖"
-    ) {
-
-        icon.textContent =
-            "📌";
-
-
-        alert(
-            "Reel saved."
-        );
-
-    }
-
-    else {
-
-        icon.textContent =
-            "🔖";
-
-
-        alert(
-            "Reel removed from saved."
-        );
-
-    }
-
+    const small = button.querySelector("small");
+    if (small) small.textContent = saved ? "Save" : "Saved";
 }
-
-
-/* =========================================
-POST
-========================================= */
 
 function createPost() {
-
-    const text =
-        prompt(
-            "What do you want to post?"
-        );
-
-
-    if (
-        text &&
-        text.trim() !== ""
-    ) {
-
-        alert(
-            "➕ Post created successfully."
-        );
-
-    }
-
+    showNotice("Post upload feature ke liye media upload aur database setup abhi baaki hai.");
 }
 
+function performSearch() {
+    const query = getElement("searchInput")?.value.trim();
 
-/* =========================================
-PROFILE / MESSAGES
-========================================= */
-
-function showMessage(title) {
-
-    alert(
-        title +
-        " section is ready."
-    );
-
-}
-
-
-function openMessages() {
-
-    alert(
-        "💬 Messages section"
-    );
-
-}
-
-
-/* =========================================
-LOGOUT
-========================================= */
-
-function logout() {
-
-    stopCustomerRideListener();
-    stopDriverRideListener();
-    stopCustomerGpsTracking();
-
-
-    driverOnline =
-        false;
-
-    pendingRide =
-        false;
-
-    currentRide =
-        null;
-
-    activeRideId =
-        null;
-
-    acceptingRide =
-        false;
-
-
-    const customerApp =
-        document.getElementById(
-            "customerApp"
-        );
-
-
-    const driverApp =
-        document.getElementById(
-            "driverApp"
-        );
-
-
-    const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
-
-
-    if (customerApp) {
-
-        customerApp.classList.remove(
-            "active-app"
-        );
-
+    if (!query) {
+        showNotice("Search mein kuch likhein.");
+        return;
     }
 
-
-    if (driverApp) {
-
-        driverApp.classList.remove(
-            "active-app"
-        );
-
+    const result = getElement("searchResult");
+    if (result) {
+        result.innerHTML = `
+            <h3>🔎 Search</h3>
+            <p>${safeText(query)}</p>
+            <p>Ride aur hotel requests unke dedicated pages se submit karein.</p>
+        `;
     }
-
-
-    if (loginScreen) {
-
-        loginScreen.classList.add(
-            "active-screen"
-        );
-
-    }
-
 }
 
+/* ================= LOGOUT ================= */
 
-/* =========================================
-DRIVER LOGOUT
-========================================= */
+function stopAllListeners() {
+    [
+        "customerRideUnsubscribe",
+        "driverRequestsUnsubscribe",
+        "driverActiveUnsubscribe",
+        "hotelBookingsUnsubscribe"
+    ].forEach(name => {
+        const unsubscribe = ({
+            customerRideUnsubscribe,
+            driverRequestsUnsubscribe,
+            driverActiveUnsubscribe,
+            hotelBookingsUnsubscribe
+        })[name];
+
+        if (typeof unsubscribe === "function") {
+            try { unsubscribe(); } catch (_) {}
+        }
+    });
+
+    if (customerRideUnsubscribe) customerRideUnsubscribe();
+    if (driverRequestsUnsubscribe) driverRequestsUnsubscribe();
+    if (driverActiveUnsubscribe) driverActiveUnsubscribe();
+    if (hotelBookingsUnsubscribe) hotelBookingsUnsubscribe();
+
+    customerRideUnsubscribe = null;
+    driverRequestsUnsubscribe = null;
+    driverActiveUnsubscribe = null;
+    hotelBookingsUnsubscribe = null;
+
+    stopDriverGps();
+    stopCustomerGps();
+}
+
+async function logout() {
+    stopAllListeners();
+
+    try {
+        await auth.signOut();
+    } catch (error) {
+        console.warn("Firebase sign out error:", error);
+    }
+
+    currentUser = null;
+    activeRideId = null;
+    currentRide = null;
+    driverOnline = false;
+    confirmationResult = null;
+
+    localStorage.removeItem("nvUserName");
+    localStorage.removeItem("nvUserRole");
+    localStorage.removeItem("nvUserPhone");
+    localStorage.removeItem("nvCurrentRideId");
+
+    showHotelDashboard(false);
+    showScreen("loginScreen");
+
+    if (getElement("loginButton")) {
+        getElement("loginButton").style.display = "block";
+    }
+
+    if (getElement("otpInput")) {
+        getElement("otpInput").style.display = "none";
+        getElement("otpInput").value = "";
+    }
+
+    if (getElement("verifyOtpButton")) {
+        getElement("verifyOtpButton").style.display = "none";
+    }
+
+    setText("otpMessage", "");
+
+    try {
+        if (recaptchaVerifier) await recaptchaVerifier.clear();
+    } catch (_) {}
+
+    recaptchaVerifier = null;
+}
 
 function driverLogout() {
-
-    stopDriverRideListener();
-    stopCustomerRideListener();
-    stopCustomerGpsTracking();
-
-
-    driverOnline =
-        false;
-
-    pendingRide =
-        false;
-
-    currentRide =
-        null;
-
-    activeRideId =
-        null;
-
-    acceptingRide =
-        false;
-
-
-    const driverApp =
-        document.getElementById(
-            "driverApp"
-        );
-
-
-    const loginScreen =
-        document.getElementById(
-            "loginScreen"
-        );
-
-
-    if (driverApp) {
-
-        driverApp.classList.remove(
-            "active-app"
-        );
-
-    }
-
-
-    if (loginScreen) {
-
-        loginScreen.classList.add(
-            "active-screen"
-        );
-
-    }
-
+    logout();
 }
 
+/* ================= APP START ================= */
 
-/* =========================================
-STOP CUSTOMER RIDE LISTENER
-========================================= */
+window.addEventListener("load", () => {
+    showScreen("loginScreen");
 
-function stopCustomerRideListener() {
+    console.log("NV Travelss app loaded successfully.");
 
-    if (customerRideListener) {
-
-        customerRideListener();
-
-        customerRideListener =
-            null;
-
-    }
-
-}
-
-
-/* =========================================
-STOP DRIVER RIDE LISTENER
-========================================= */
-
-function stopDriverRideListener() {
-
-    if (driverRideListener) {
-
-        driverRideListener();
-
-        driverRideListener =
-            null;
-
-    }
-
-}
-
-
-/* =========================================
-STOP ALL RIDE LISTENERS
-========================================= */
-
-function stopRideListener() {
-
-    stopCustomerRideListener();
-
-    stopDriverRideListener();
-
-    stopCustomerGpsTracking();
-
-}
-
-
-/* =========================================
-SAFE TEXT
-========================================= */
-
-function escapeRideText(value) {
-
-    if (
-        value === undefined ||
-        value === null
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-/* =========================================
-APP START
-========================================= */
-
-window.addEventListener(
-    "load",
-    function () {
-
-        console.log(
-            "🚕 NV Travelss app loaded successfully."
-        );
-
-    }
-);
+    /*
+       Login par OTP hamesha required rahega.
+       Purani saved details se automatic login nahi hota.
+    */
+});
